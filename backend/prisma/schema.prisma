@@ -10,12 +10,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Alunos {
-  id              Int     @id @default(autoincrement()) 
-  nome            String
-  sobrenome       String
-  email           String  @unique 
-  senha           String   
-  data_nascimento DateTime 
-  cpf             Int  @unique 
+model Login {
+  id            Int     @id @default(autoincrement())
+  cpf           String  @unique
+  senhaHash     String
+  ativo         Boolean
+  nome          String
+  administrador Int
+
+  @@map(name: "usuarios")
 }
