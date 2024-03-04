@@ -7,7 +7,6 @@ const FormulariosPage: React.FC = () => {
         <div>
             <h1>Formulários</h1>
             <Navbar />
-            {/* ... Outros componentes ou conteúdo ... */}
             <LoginComponent />
         </div>
     );

@@ -1,0 +1,13 @@
+NAVBAR: 
+    - Reformular navbar com os links que realmente deveriam estar nela: 
+        - Para os alunos, são as páginas: Logout, Responder os Formulários, Revisar suas Informações
+        - Para o nível primário de adm: Logout, Acesso aos relatórios
+        - Para o nível de adm do sistema: Logout, Acesso aos relatórios, Cadastro de novas perguntas
+    - Responsividade 
+    - Dúvidas: 
+        - Que nível de usuário deveria ser o responsável pelo cadastro de informações através de um arquivo excel?
+
+FORMULÁRIOS: 
+    - Fazer lógica para mostrar somente as perguntas ativas aos alunos 
+    - Criar lógica para salvamento das respostas no Banco de Dados, considerando recorrência de dados *
+    
