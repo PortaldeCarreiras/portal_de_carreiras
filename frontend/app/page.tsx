@@ -1,12 +1,10 @@
 
-export default function Home() {
-  return (
-    <div className='flex'>
-      <div>
-        <h1>Página Inicial</h1><br /><br />
+import LoginComponent from "./components/login";
+
+export default function LoginPage() {
+    return (
         <div>
+            <LoginComponent />
         </div>
-      </div>
-    </div>
-  )
-}
+    );
+};
