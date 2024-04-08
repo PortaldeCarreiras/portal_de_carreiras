@@ -1,44 +1,41 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// tabela login 
-model Login {
-  cpf           String  @id
-  senhaHash     String
-  ativo         Boolean
-  administrador Int
+model Users {
+  id         Int      @id @default(autoincrement())
+  name       String
+  email      String
+  cpf        String
+  password   String
+  isActive   Boolean
+  isAdmin    Boolean
+  created_at DateTime
 
-  // nome da tabela no banco de dados
-  @@map(name: "tb_login")
+  @@map("users")
 }
 
-// tabela categoria da pergunta 
-model Categoria_pergunta {
-  id_categoria_pergunta Int        @id @default(autoincrement())
-  descricao             String
-  Pergunta              Pergunta[] // uma lista com todas as perguntas de uma categoria 
+model Categories {
+  id          Int         @id @default(autoincrement())
+  description String
+  created_at  DateTime
+  Questions   Questions[]
 
-  @@map(name: "tb_categoria_pergunta")
+  @@map("categories")
 }
 
-// tabela pergunta 
-model Pergunta {
-  ID_pergunta           Int     @id @default(autoincrement())
-  pergunta              String
-  statusPergunta        Boolean
-  id_categoria_pergunta Int // Chave estrangeira para a tabela Categoria_pergunta
+model Questions {
+  id          Int        @id @default(autoincrement())
+  question    String
+  isActive    Boolean
+  id_category Int
+  created_at  DateTime
+  categories  Categories @relation(fields: [id_category], references: [id])
 
-  // Relacionamento com a tabela Categoria_pergunta
-  categoria_pergunta Categoria_pergunta @relation(fields: [id_categoria_pergunta], references: [id_categoria_pergunta])
-
-  @@map(name: "tb_pergunta")
+  @@map("questions")
 }
