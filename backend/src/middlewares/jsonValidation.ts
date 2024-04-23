@@ -1,6 +1,5 @@
 import { NextFunction, Request, Response } from "express";
 import Joi, { ObjectSchema } from "joi";
-import { UnprocessableEntity } from "../helpers/httpResponses";
 import { checkCPF } from "../helpers/stringHelper";
 
 function jsonValidation(schema: ObjectSchema) {
@@ -17,7 +16,7 @@ function jsonValidation(schema: ObjectSchema) {
           (i: any) => (errorMessage += i.message.replaceAll(`"`, "") + ", ")
         );
       }
-      return UnprocessableEntity(res, errorMessage);
+      return res.customResponse.unprocessableEntity(errorMessage);
     }
   };
 }
