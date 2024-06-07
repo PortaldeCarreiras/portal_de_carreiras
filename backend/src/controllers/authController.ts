@@ -1,76 +1,46 @@
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
-import { prismaClient } from "..";
-import authenticate from "../helpers/authenticate";
-import hashPassword from "../helpers/hashPassword";
-import {
-  checkExistingUserByCPF,
-  checkExistingUserByEmail,
-} from "../services/usersService";
-import { unmask } from "../helpers/stringHelper";
+import StudentService from "@src/services/studentService";
+import authenticate from "@src/utils/helpers/authenticate";
+import { Student } from "@src/models/studentSchema";
 
-async function login(req: Request, res: Response) {
-  const { cpf, password } = req.body;
-  const loginErrorMessage = "Usuário ou senha incorreto";
+export default class AuthController {
+  private studentService: StudentService;
 
-  try {
-    const user = await prismaClient.users.findFirst({
-      where: { cpf },
-    });
-
-    if (!user) return res.customResponse.error(loginErrorMessage);
-    if (!user.isActive) return res.customResponse.error("Usuário desativado");
-
-    const isPasswordCorrect = await bcrypt.compare(password, user.password);
-    if (!isPasswordCorrect) res.customResponse.error(loginErrorMessage);
-
-    const token = await authenticate(user);
-    if (!token)
-      return res.customResponse.error("Erro ao obter token de acesso");
-
-    res.setHeader("Authorization", `Bearer ${token}`);
-
-    user.password = "";
-
-    return res.customResponse.success({ user, token });
-  } catch (e) {
-    return res.customResponse.error();
+  constructor() {
+    this.studentService = new StudentService();
   }
+
+  public login = async (req: Request, res: Response) => {
+    const { cpf, password } = req.body;
+    const loginErrorMessage = "Usuário ou senha incorreto";
+
+    try {
+      const student = await this.studentService.getStudentByCpf(cpf);
+
+      if (!student) return res.status(400).json({ error: loginErrorMessage });
+
+      const isPasswordCorrect = await bcrypt.compare(password, student.senha);
+      if (!isPasswordCorrect)
+        return res.status(400).json({ error: loginErrorMessage });
+
+      const model = {
+        documentos: {
+          cpf: cpf,
+        },
+        nome: student.nome,
+        id: student._id,
+      };
+
+      const token = await authenticate(model);
+      if (!token)
+        return res.status(400).json({ error: "Erro ao obter token de acesso" });
+
+      res.setHeader("Authorization", `Bearer ${token}`);
+
+      return res.status(201).json({ model, token });
+    } catch (e: any) {
+      return res.status(500).json({ error: e.message });
+    }
+  };
 }
-
-async function register(req: Request, res: Response) {
-  const { name, email, cpf, password } = req.body;
-
-  try {
-    const checkExistingUserEmail = await checkExistingUserByEmail(email);
-    if (checkExistingUserEmail)
-      return res.customResponse.error("User with this email already exists");
-
-    const checkExistingUserCPF = await checkExistingUserByCPF(cpf);
-    if (checkExistingUserCPF)
-      return res.customResponse.error("User with this cpf already exists");
-
-    const passwordHashed = await hashPassword(password);
-
-    const user = await prismaClient.users.create({
-      data: {
-        created_at: new Date(),
-        name,
-        email,
-        cpf: unmask(cpf),
-        password: passwordHashed,
-        isActive: true,
-        isAdmin: false,
-      },
-    });
-
-    user.password = "";
-
-    return res.customResponse.success(user);
-  } catch (e) {
-    console.log(e);
-    return res.customResponse.error();
-  }
-}
-
-export { login, register };

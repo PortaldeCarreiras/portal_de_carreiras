@@ -1,16 +1,12 @@
 import { Router } from "express";
 import authRoutes from "./authRoutes";
-import userRoutes from "./userRoutes";
-import questionRoutes from "./questionRoutes";
-import questionCategoryRoutes from "./questionCategoryRoutes";
+import studentRoutes from "./studentRoutes";
 
 const router = Router();
 
 export default function routes() {
   authRoutes(router);
-  userRoutes(router);
-  questionRoutes(router);
-  questionCategoryRoutes(router);
+  studentRoutes(router);
 
   return router;
 }

@@ -5,27 +5,33 @@ import compression from "compression";
 import cookieParser from "cookie-parser";
 import http from "http";
 import routes from "./routes";
-import config from "./config/config";
-import { PrismaClient } from "@prisma/client";
-import { customResponseMiddleware } from "./middlewares/customResponse";
+import config from "./utils/config/config";
+import mongoose from "mongoose";
 
 const port = config.server.port;
-const app = express();
+const databaseUrl = config.database.url;
 
-app.use(cors());
+mongoose
+  .connect(databaseUrl, { w: "majority" })
+  .then((data) => {
+    start();
+  })
+  .catch((error) => {
+    console.log(error);
+  });
 
-app.use(compression());
-app.use(cookieParser());
-app.use(bodyParser.json({ limit: "50mb" }));
+function start() {
+  const app = express();
 
-app.use(customResponseMiddleware);
+  app.use(cors());
 
-app.use("/", routes());
+  app.use(compression());
+  app.use(cookieParser());
+  app.use(bodyParser.json({ limit: "50mb" }));
 
-const server = http.createServer(app);
+  app.use("/", routes());
 
-server.listen(port, () => console.log(`Server running on port ${port}`));
+  const server = http.createServer(app);
 
-const prismaClient = new PrismaClient();
-
-export { prismaClient };
+  server.listen(port, () => console.log(`Server running on port ${port}`));
+}

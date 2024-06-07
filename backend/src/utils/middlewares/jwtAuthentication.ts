@@ -9,14 +9,16 @@ function isAuthenticated(req: Request, res: Response, next: NextFunction) {
     !req.headers.authorization ||
     !req.headers.authorization.toLowerCase().includes("bearer")
   )
-    return res.customResponse.unauthorized();
+    return res.status(401).json({ error: "Usuário não autenticado." });
 
   const authorizationSplit = req.headers.authorization.split(" ");
   const token = authorizationSplit[1];
-  if (!token) return res.customResponse.unauthorized();
+  if (!token)
+    return res.status(401).json({ error: "Usuário não autenticado." });
 
   jwt.verify(token, SECRET, (error, decoded) => {
-    if (error) return res.customResponse.unauthorized();
+    if (error)
+      return res.status(401).json({ error: "Usuário não autenticado." });
 
     res.locals.jwt = decoded;
     next();
