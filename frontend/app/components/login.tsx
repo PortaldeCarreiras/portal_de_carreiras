@@ -32,7 +32,8 @@ export default function LoginComponent() {
                 localStorage.setItem('token', response.data.token);
 
                 // Redirect to the desired page (e.g., dashboard)
-                router.push("/administrador/excel");
+                router.push("/administrador/excel");                     // >>> ADM <<<
+                // router.push("/formularios");                    // >>> Aluno <<<
             } else {
                 setMensagemErro("Erro ao obter token de acesso");
             }
