@@ -1,8 +1,7 @@
-// LoginComponent.tsx
 'use client';
 
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../services/axiosClient';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import Image from 'next/image';
@@ -11,37 +10,35 @@ export default function LoginComponent() {
     const [cpf, setCpf] = useState('');
     const [senha, setSenha] = useState('');
     const [mensagemErro, setMensagemErro] = useState('');
-    const router = useRouter()
-    var mensagem = ""
+    const router = useRouter();
 
     const handleLogin = async () => {
         try {
-            console.log('Antes da chamada ao backend');
+            const response = await api.post('/auth/login', { cpf, password: senha }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
 
-            const response = await axios.post('http://localhost:3001/login', { cpf, senha })
+            if (response.data.token) {
+                const { cpf, nome } = response.data.model;
 
-            console.log('Após a chamada ao backend');
+                console.log('Login successful:', response.data);
 
-            if (response.data.sucesso) {
-                const { cpf, nome, administrador } = response.data.usuario;
+                // Display success message
+                Swal.fire("Logado com sucesso!");
 
-                // Sweat ALert
-                Swal.fire("Logado com sucesso!")
+                // Store the token in local storage or a cookie
+                localStorage.setItem('token', response.data.token);
 
-                // Redirecionamento com base no tipo de usuário usando o componente Link
-                if (administrador === 0) {
-                    router.push("/alunos")
-                } else if (administrador === 1) {
-                    router.push("/administrador/formularios")
-                } else if (administrador === 2) {
-                    router.push("/administrador")
-                }
+                // Redirect to the desired page (e.g., dashboard)
+                router.push("/administrador/excel");
             } else {
-                setMensagemErro(response.data.mensagem);
-                console.log(mensagemErro)
+                setMensagemErro("Erro ao obter token de acesso");
             }
         } catch (error) {
             console.error('Erro no login:', error);
+            setMensagemErro('Usuário ou senha incorreto'); // General error message
         }
     };
 
@@ -60,7 +57,7 @@ export default function LoginComponent() {
             </div>
 
             {/* Seção de Login */}
-            <div className="flex-grow bg-gray-700 flex flex-col items-center justify-center p-6 relative">
+            <div className="flex-grow bg-gray-400 flex flex-col items-center justify-center p-6 relative">
 
                 {/* Seção de Logo da Faculdade */}
                 <div className="absolute top-0 right-0 p-4 bg-white rounded-full hidden lg:block shadow-lg">
@@ -103,14 +100,8 @@ export default function LoginComponent() {
                     </button>
 
                     <div className="mt-2 text-red-500">
-                        {mensagemErro && (<p>
-                            {mensagemErro === 'Usuário não encontrado' && 'Usuário não encontrado. Verifique seu CPF.'}
-                            {mensagemErro === 'Usuário desativado' && 'Usuário desativado. Entre em contato com o suporte.'}
-                            {mensagemErro === 'Senha incorreta' && 'Senha incorreta. Tente novamente.'}
-                            {mensagemErro === 'Erro interno do servidor' && 'Erro no login. Tente novamente mais tarde.'}
-                        </p>)}
+                        {mensagemErro && <p>{mensagemErro}</p>}
                     </div>
-
 
                     <div className="mt-4">
                         <button
@@ -125,4 +116,4 @@ export default function LoginComponent() {
             </div>
         </main>
     );
-};
+}
