@@ -21,7 +21,7 @@ export default function LoginComponent() {
             });
 
             if (response.data.token) {
-                const { cpf, nome } = response.data.model;
+                const { cpf, nome, role } = response.data.model;
 
                 console.log('Login successful:', response.data);
 
@@ -31,9 +31,12 @@ export default function LoginComponent() {
                 // Store the token in local storage or a cookie
                 localStorage.setItem('token', response.data.token);
 
-                // Redirect to the desired page (e.g., dashboard)
-                router.push("/administrador/excel");                     // >>> ADM <<<
-                // router.push("/formularios");                    // >>> Aluno <<<
+                if (role === 'admin') {
+                    router.push("/administrador/excel");  // Rota de administrador
+                } else {
+                    router.push("/alunos");  // Rota de aluno
+                }
+
             } else {
                 setMensagemErro("Erro ao obter token de acesso");
             }

@@ -1,14 +1,16 @@
-// UploadComponent.tsx
 'use client';
 
 import { useState } from 'react';
 import axios from '../services/axiosClient';
 import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 const UploadComponent = () => {
     const [file, setFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
+    const router = useRouter();
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
@@ -28,107 +30,74 @@ const UploadComponent = () => {
     // Json do estudante
     const mapRowToStudent = (row: any) => {
         return {
-            nome: row.NOME || '',
+            nome: row.nome || '',
             identidade: {
-                tipo: row.IDENTIDADE_TIPO || 'cpf',
-                numero: row.IDENTIDADE || '',
+                tipo: row.identidade_tipo || 'cpf',
+                numero: parseInt(row.identidade) || 0,
             },
-            sexo: row.SEXO || '',
-            estado_civil: row.ESTADO_CIV || '',
+            sexo: row.sexo || '',
+            estado_civil: row.estado_civil || '',
             endereco: {
-                uf: row.UF || '',
-                rua: row.ENDERECO || '',
-                numero: row.NUMERO || '',
-                complemento: row.COMPLEMENTO || '',
-                bairro: row.BAIRRO || '',
-                cep: row.CEP || '00000000',
+                uf: row.uf || '',
+                rua: row.endereco || '',
+                numero: parseInt(row.numero) || 0,
+                complemento: row.complemento || '',
+                bairro: row.bairro || '',
+                cep: parseInt(row.cep) || 0,
             },
             contatos: {
                 principal: {
-                    ddd: row.DDD || '',
-                    telefone: row.TELEFONE || '',
-                    email: row.EMAIL || '',
+                    ddd: parseInt(row.ddd) || 0,
+                    telefone: parseInt(row.telefone) || 0,
+                    email: row.email || '',
                 },
                 secundario: {
-                    ddd: row.DDD_2 || '',
-                    telefone: row.TELEFONE_2 || '',
-                    email: row.EMAIL_2 || '',
+                    ddd: parseInt(row.ddd_2) || 0,
+                    telefone: parseInt(row.telefone_2) || 0,
+                    email: row.email_2 || '',
                 },
             },
-            afrodescendente: convertStringToBoolean(row.AFRODESCENDENTE),
-            escolaridade: convertStringToBoolean(row.ESCOLARIDADE),
-            necessidade: row.NECESSIDADE || '',
+            afrodescendente: convertStringToBoolean(row.afrodescendente),
+            escolaridade: convertStringToBoolean(row.escolaridade),
+            necessidade: row.necessidade || '',
             notas: {
-                historia: row.HISTÓRIA || 0,
-                quimica: row.QUÍMICA || 0,
-                ingles: row.INGLÊS || 0,
-                matematica: row.MATEMÁTICA || 0,
-                fisica: row.FÍSICA || 0,
-                geografia: row.GEOGRAFIA || 0,
-                biologia: row.BIOLOGIA || 0,
-                multidisciplinar: row.MULTIDISCIPLINAR || 0,
-                raciocinio_logico: row.RACIOCÍNIO_LÓGICO || 0,
-                portugues: row.PORTUGUÊS || 0,
-                acertos: row.ACERTOS || 0,
-                nota_prova: row.NOTAPROVA || 0,
-                nota_redacao: row.NOTARED || 0,
-                nota_final: row.NOTAFINAL || 0,
-                nota_final_acrescida: row.NFACRES2 || 0,
+                historia: parseFloat(row.historia) || 0,
+                quimica: parseFloat(row.quimica) || 0,
+                ingles: parseFloat(row.ingles) || 0,
+                matematica: parseFloat(row.matematica) || 0,
+                fisica: parseFloat(row.fisica) || 0,
+                geografia: parseFloat(row.geografia) || 0,
+                biologia: parseFloat(row.biologia) || 0,
+                multidisciplinar: parseFloat(row.multidisciplinar) || 0,
+                raciocinio_logico: parseFloat(row.raciocinio_logico) || 0,
+                portugues: parseFloat(row.portugues) || 0,
+                acertos: parseFloat(row.acertos) || 0,
+                nota_prova: parseFloat(row.nota_prova) || 0,
+                nota_redacao: parseFloat(row.nota_redacao) || 0,
+                nota_final: parseFloat(row.nota_final) || 0,
+                nota_final_acrescida: parseFloat(row.nota_final_acrescida) || 0,
             },
             classificacao: {
                 curso_1: {
-                    nome_curso: row.CURSO_1 || '',
-                    class: row.CLASS || 0,
-                    situacao: row.SITUACAO || '',
+                    nome_curso: row.curso_1 || '',
+                    class: parseInt(row.class) || 0,
+                    situacao: row.situacao || '',
                 },
                 curso_2: {
-                    nome_curso: row.CURSO_NOME2 || '',
-                    class: row.CLASS2 || 0,
-                    situacao: row.SITUACAO2 || '',
+                    nome_curso: row.curso_2 || '',
+                    class: parseInt(row.class_2) || 0,
+                    situacao: row.situacao_2 || '',
                 },
             },
             documentos: {
-                tipo_identidade: row.TIPO_IDENTIDADE || 'cpf',
-                cpf: row.CPF || '',
-                nome_mae: row.NOME_MAE || '',
+                tipo_identidade: row.tipo_identidade || 'cpf',
+                cpf: parseInt(row.cpf) || 0,
+                nome_mae: row.nome_mae || '',
             },
         };
     };
 
-
-    // const handleUpload = async () => {
-    //     if (!file) {
-    //         Swal.fire('Por favor, selecione um arquivo primeiro.');
-    //         return;
-    //     }
-
-    //     setUploading(true);
-
-    //     const reader = new FileReader();
-    //     reader.onload = async (e) => {
-    //         const data = e.target?.result;
-    //         const workbook = XLSX.read(data, { type: 'binary' });
-    //         const sheetName = workbook.SheetNames[0];
-    //         const sheet = workbook.Sheets[sheetName];
-    //         const rows = XLSX.utils.sheet_to_json(sheet);
-
-    //         try {
-    //             for (const row of rows) {
-    //                 const student = mapRowToStudent(row);
-    //                 const response = await axios.post('/student', student);
-    //                 console.log('Usuário criado:', response.data);
-    //             }
-    //             Swal.fire('Todos os usuários foram criados com sucesso!');
-    //         } catch (error) {
-    //             console.error('Erro ao criar usuário:', error);
-    //             Swal.fire('Erro ao criar usuário. Verifique o console para mais detalhes.');
-    //         } finally {
-    //             setUploading(false);
-    //         }
-    //     };
-    //     reader.readAsBinaryString(file);
-    // };
-
+    // xml
     const handleUpload = async () => {
         if (!file) {
             Swal.fire('Por favor, selecione um arquivo primeiro.');
@@ -140,21 +109,10 @@ const UploadComponent = () => {
         const reader = new FileReader();
         reader.onload = async (e) => {
             const data = e.target?.result;
-            let rows;
-
-            // Detect the file extension
-            const fileExtension = file.name.split('.').pop()?.toLowerCase();
-
-            if (fileExtension === 'csv') {
-                const workbook = XLSX.read(data, { type: 'binary', codepage: 65001 });
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                rows = XLSX.utils.sheet_to_json(sheet, { raw: false });
-            } else {
-                const workbook = XLSX.read(data, { type: 'binary' });
-                const sheetName = workbook.SheetNames[0];
-                const sheet = workbook.Sheets[sheetName];
-                rows = XLSX.utils.sheet_to_json(sheet, { raw: false });
-            }
+            const workbook = XLSX.read(data, { type: 'binary' });
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+            const rows = XLSX.utils.sheet_to_json(sheet);
 
             try {
                 for (const row of rows) {
@@ -173,25 +131,71 @@ const UploadComponent = () => {
         reader.readAsBinaryString(file);
     };
 
+    const handleLoginRedirect = () => {
+        router.push('/');
+    };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen py-2">
-            <h1 className="text-2xl font-bold mb-4">Upload de Usuários</h1>
-            <input
-                type="file"
-                accept=".xlsx, .xls"
-                onChange={handleFileChange}
-                className="mb-4 p-2 border rounded"
-            />
-            <button
-                onClick={handleUpload}
-                className="bg-blue-500 text-white p-2 rounded"
-                disabled={uploading}
-            >
-                {uploading ? 'Carregando...' : 'Upload'}
-            </button>
+        <div className="min-h-screen bg-white flex flex-col">
+            {/* Navbar */}
+            <nav className="bg-slate-100 shadow-md p-4 flex justify-between items-center">
+                <div className="flex items-center">
+                    <Image
+                        src="/images/fatecSJC.png"
+                        className="object-contain h-12 w-12 md:h-16 md:w-16"
+                        alt="Logo da Faculdade"
+                        width={64}
+                        height={64}
+                    />
+                    <span className="ml-3 text-xl font-bold text-gray-800">Administração</span>
+                </div>
+                <button
+                    className="bg-blue-500 text-white font-extrabold p-2 rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:shadow-outline"
+                    onClick={handleLoginRedirect}
+                >
+                    Login
+                </button>
+            </nav>
+
+            {/* Conteúdo Principal */}
+            <div className="flex-grow flex items-center justify-center p-6">
+                <div className="w-full max-w-lg lg:max-w-3xl bg-white p-8 border border-gray-300 rounded-lg shadow-lg">
+                    <h1 className="text-3xl font-bold text-center mb-8 text-gray-900">Upload de Usuários</h1>
+
+                    {/* Botão para Download do Arquivo Excel */}
+                    <div className="mb-6">
+                        <a
+                            href="/modelo_padrao_upload_de_usuarios.xlsx"
+                            download
+                            className="w-full py-3 rounded-lg bg-green-500 text-white font-extrabold shadow-md hover:bg-green-600 transition duration-200 ease-in-out flex items-center justify-center"
+                        >
+                            Baixar Exemplo de Arquivo Excel
+                        </a>
+                    </div>
+
+                    {/* Input para Upload de Arquivo */}
+                    <div className="mb-6">
+                        <input
+                            type="file"
+                            accept=".xlsx, .xls"
+                            onChange={handleFileChange}
+                            className="w-full p-3 border border-gray-300 rounded-lg shadow-md focus:outline-none focus:ring focus:ring-blue-200 text-black"
+                        />
+                    </div>
+
+                    {/* Botão de Upload */}
+                    <button
+                        onClick={handleUpload}
+                        className={`w-full py-3 rounded-lg text-white font-extrabold ${false ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'} shadow-md transition duration-200 ease-in-out`}
+                        disabled={false} // Altere a lógica de upload aqui
+                    >
+                        Upload
+                    </button>
+                </div>
+            </div>
         </div>
     );
+
 };
 
 export default UploadComponent;
