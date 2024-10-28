@@ -12,7 +12,13 @@ const port = config.server.port;
 const databaseUrl = config.database.url;
 
 mongoose
-  .connect(databaseUrl, { w: "majority" })
+  .connect(databaseUrl, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    writeConcern: {
+      w: "majority"
+    }
+  })
   .then((data) => {
     start();
   })

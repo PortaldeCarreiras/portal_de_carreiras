@@ -4,7 +4,7 @@ dotenv.config();
 
 const PORT = process.env.PORT || 3001;
 
-const EXPIRES_IN = process.env.EXPIRES_IN || "";
+const EXPIRES_IN = process.env.EXPIRES_IN || "55min";
 const SALT_ROUNDS = process.env.SALT_ROUNDS || 10;
 const SECRET = process.env.SECRET || "";
 
