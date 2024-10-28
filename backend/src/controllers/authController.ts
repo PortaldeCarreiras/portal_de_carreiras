@@ -30,6 +30,7 @@ export default class AuthController {
         },
         nome: student.nome,
         id: student._id,
+        role: student.role,
       };
 
       const token = await authenticate(model);

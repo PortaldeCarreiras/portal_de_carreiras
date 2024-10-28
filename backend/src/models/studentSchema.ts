@@ -58,6 +58,7 @@ interface Documentos {
 interface Student extends Document {
   nome: string;
   senha: string;
+  role: string;
   identidade?: Identity;
   sexo?: string;
   nascimento?: string;
@@ -77,7 +78,7 @@ interface Student extends Document {
 
 const IdentitySchema: Schema = new Schema({
   tipo: { type: String, required: false },
-  numero: { type: Number, required: false },
+  numero: { type: Number, required: true },
 });
 
 const EnderecoSchema: Schema = new Schema({
@@ -126,14 +127,15 @@ const ClassificacaoSchema: Schema = new Schema({
 
 const DocumentosSchema: Schema = new Schema({
   tipo_identidade: { type: String, required: false },
-  cpf: { type: Number, required: true },
+  cpf: { type: Number, required: false },
   nome_mae: { type: String, required: false },
 });
 
 const StudentSchema: Schema = new Schema({
   nome: { type: String, required: true },
-  senha: { type: String, required: true },
-  identidade: { type: IdentitySchema, required: false },
+  senha: { type: String, required: false },
+  role: { type: String, enum: ['admin', 'aluno'], default: 'aluno' },
+  identidade: { type: IdentitySchema, required: true },
   sexo: { type: String, required: false },
   nascimento: { type: String, required: false },
   estado_civil: { type: String, required: false },
@@ -147,7 +149,7 @@ const StudentSchema: Schema = new Schema({
   necessidade: { type: String, required: false },
   notas: { type: NotasSchema, required: false },
   classificacao: { type: ClassificacaoSchema, required: false },
-  documentos: { type: DocumentosSchema, required: true },
+  documentos: { type: DocumentosSchema, required: false },
 });
 
 const StudentModel = mongoose.model<Student>("Student", StudentSchema);

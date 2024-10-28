@@ -5,9 +5,9 @@ import { Router } from "express";
 const controller = new StudentController();
 
 export default function studentRoutes(router: Router) {
-  router.get("/student/:id", isAuthenticated, controller.getStudentById);
-  router.get("/student", isAuthenticated, controller.getAllStudents);
+  router.get("/student/:id", controller.getStudentById);
+  router.get("/student", controller.getAllStudents);
   router.post("/student", controller.createStudent);
-  router.put("/student/:id", isAuthenticated, controller.updateStudent);
-  router.delete("/student/:id", isAuthenticated, controller.deleteStudent);
+  router.put("/student/:id", controller.updateStudent);
+  router.delete("/student/:id", controller.deleteStudent);
 }
