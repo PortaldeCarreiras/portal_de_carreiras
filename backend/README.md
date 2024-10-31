@@ -187,7 +187,7 @@ Caso o campo enviado já esteja salvo, o valor será atualizado.
 ## Rotas - Respostas
 
 ### 1. Criar resposta
-- **URL**: `/question`
+- **URL**: `/answer`
 - **Método**: `POST`
 - **Autenticação**: `Authorization: Bearer <token>` 
 - **Body**: 
