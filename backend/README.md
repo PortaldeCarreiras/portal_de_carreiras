@@ -149,9 +149,9 @@ A busca geral apenas faz uma consulta no Banco de Dados retornando todos os estu
 - **Método**: `PUT`
 - **Autenticação**: `Authorization: Bearer <token>` 
 - **Body**:
-Possui os mesmos campos de criação, mas com um funcionamento diferente.
+* Possui os mesmos campos de criação, mas com um funcionamento diferente.
 
-Caso seja enviado um campo que ja faça parte do questionSchema e que não esteja salvo. ele irá salvar o valor anterior.
+* Caso seja enviado um campo que ja faça parte do questionSchema e que não esteja salvo. ele irá salvar o valor anterior.
 Caso o campo enviado já esteja salvo, o valor será atualizado.
 
 
@@ -159,25 +159,25 @@ Caso o campo enviado já esteja salvo, o valor será atualizado.
 - **URL**: `"/question/:id`
 - **Método**: `DELETE`
 - **Autenticação**: `Authorization: Bearer <token>`
-A exclusão funciona por meio do ID da pergunta que é gerado no Banco de Dados, esse ID é passado como parâmetro na hora da remoção.
+* A exclusão funciona por meio do ID da pergunta que é gerado no Banco de Dados, esse ID é passado como parâmetro na hora da remoção.
 
 ### 4. Buscar pergunta
 - **URL**: `/question/:id`
 - **Método**: `GET`
 - **Autenticação**: `Authorization: Bearer <token>` 
-A Busca funciona também pelo ID da pergunta do Banco de Dados, esse ID é passado como parâmetro para o back-end na hora de uma busca específica.
+* A Busca funciona também pelo ID da pergunta do Banco de Dados, esse ID é passado como parâmetro para o back-end na hora de uma busca específica.
 
 ### 5. Buscar todas perguntas
 - **URL**: `/question`
 - **Método**: `GET`
 - **Autenticação**: `Authorization: Bearer <token>` 
-A busca geral apenas faz uma consulta no Banco de Dados retornando todos as perguntas encontradas.
+* A busca geral apenas faz uma consulta no Banco de Dados retornando todos as perguntas encontradas.
 
 ### 6. Buscar perguntas ativas
 - **URL**: `/question/active`
 - **Método**: `GET`
 - **Autenticação**: `Authorization: Bearer <token>` 
-- Esse método vai realizar uma consulta no Banco de Dados e retornar apenas as perguntas ativas, para isso o campo "status_pergunta" tem que estar "true", as perguntas com o status = false não serão retornadas.
+* Esse método vai realizar uma consulta no Banco de Dados e retornar apenas as perguntas ativas, para isso o campo "status_pergunta" tem que estar "true", as perguntas com o status = false não serão retornadas.
 ```json
 {
     "status_pergunta": true
