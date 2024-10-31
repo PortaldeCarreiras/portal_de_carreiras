@@ -112,19 +112,19 @@ Caso o campo enviado já esteja salvo no aluno, o valor será atualizado.
 - **URL**: `/student/:id`
 - **Método**: `DELETE`
 - **Autenticação**: `Authorization: Bearer <token>`
-A exclusão funciona por meio do ID do estudante que é gerado no Banco de Dados, esse ID é passado como parâmetro para o back-end na hora da remoção.
+* A exclusão funciona por meio do ID do estudante que é gerado no Banco de Dados, esse ID é passado como parâmetro para o back-end na hora da remoção.
 
 ### 4. Buscar aluno
 - **URL**: `/student/:id`
 - **Método**: `GET`
 - **Autenticação**: `Authorization: Bearer <token>` 
-A Busca funciona também pelo ID do estudante do Banco de Dados, esse ID é passado como parâmetro para o back-end na hora de uma busca específica.
+* A Busca funciona também pelo ID do estudante do Banco de Dados, esse ID é passado como parâmetro para o back-end na hora de uma busca específica.
 
 ### 5. Buscar todos alunos
 - **URL**: `/student`
 - **Método**: `GET`
 - **Autenticação**: `Authorization: Bearer <token>` 
-A busca geral apenas faz uma consulta no Banco de Dados retornando todos os estudantes encontrados.
+* A busca geral apenas faz uma consulta no Banco de Dados retornando todos os estudantes encontrados.
 
 
 ## Rotas -Perguntas
