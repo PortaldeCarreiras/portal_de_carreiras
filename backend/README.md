@@ -127,7 +127,7 @@ Caso o campo enviado já esteja salvo no aluno, o valor será atualizado.
 * A busca geral apenas faz uma consulta no Banco de Dados retornando todos os estudantes encontrados.
 
 
-## Rotas -Perguntas
+## Rotas - Perguntas
 
 
 ### 1. Criar pergunta
@@ -149,9 +149,9 @@ Caso o campo enviado já esteja salvo no aluno, o valor será atualizado.
 - **Método**: `PUT`
 - **Autenticação**: `Authorization: Bearer <token>` 
 - **Body**:
-* Possui os mesmos campos de criação, mas com um funcionamento diferente.
+Possui os mesmos campos de criação, mas com um funcionamento diferente.
 
-* Caso seja enviado um campo que ja faça parte do questionSchema e que não esteja salvo. ele irá salvar o valor anterior.
+Caso seja enviado um campo que ja faça parte do questionSchema e que não esteja salvo. ele irá salvar o valor anterior.
 Caso o campo enviado já esteja salvo, o valor será atualizado.
 
 
