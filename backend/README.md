@@ -185,3 +185,73 @@ Caso o campo enviado já esteja salvo, o valor será atualizado.
 ```
 
 ## Rotas - Respostas
+
+### 1. Criar resposta
+- **URL**: `/question`
+- **Método**: `POST`
+- **Autenticação**: `Authorization: Bearer <token>` 
+- **Body**: 
+* Todos os campos são obrigatórios.
+```json
+{
+  "id_aluno": "string",
+  "id_pergunta": "string",
+  "resposta": "string",
+  "version": "string",
+  "data_resposta": "string"
+}
+
+```
+
+### 2. Buscar resposta
+- **URL**: `/answer/:id`
+- **Método**: `GET`
+- **Autenticação**: `Authorization: Bearer <token>` 
+* A Busca funciona também pelo ID da resposta do Banco de Dados, esse ID é passado como parâmetro para o back-end na hora de uma busca específica.
+
+### 3. Buscar todas respostas
+- **URL**: `/answer`
+- **Método**: `GET`
+- **Autenticação**: `Authorization: Bearer <token>` 
+* A busca geral apenas faz uma consulta no Banco de Dados retornando todos as respostas encontradas.
+
+### 4. Buscar a resposta mais recente
+- **URL**: `/answer/latest`
+- **Método**: `GET`
+- **Autenticação**: `Authorization: Bearer <token>` 
+* A busca das respostas mais recentes é feito com base na ordenação por versão e data das respostas, depois realiza um agrupamento dessas respostas para extrair a mais recente.
+
+```javascript
+
+{
+  $sort: { version: -1, data_resposta: -1 } // Ordena pela versão e data mais recente
+},
+
+{
+  $group: {
+    _id: {
+      id_aluno: "$id_aluno",
+      id_pergunta: "$id_pergunta" // Agrupa por aluno e pergunta
+    },
+    
+    latestAnswer: { $first: "$$ROOT" } // Pega a resposta mais recente para cada pergunta
+  }
+}
+
+```
+
+### 5. Buscar a resposta mais recente com base em uma data específica.
+- **URL**: `/answer/latest-before-date`
+- **Método**: `GET`
+- **Autenticação**: `Authorization: Bearer <token>` 
+* A busca das respostas mais recente com base em uma data é feita com base em uma data fornecida, ou seja, só serão recuperadas as respostas com datas menor ou igual a especificada.
+
+```javascript
+{
+  $match: { data_resposta: { $lte: date } } // Filtra as respostas com data menor ou igual à fornecida
+},
+
+{
+  $sort: { version: -1, data_resposta: -1 } // Ordena pela versão e data mais recente
+}
+```
