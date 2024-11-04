@@ -4,15 +4,27 @@
 
 ## Rotas - Autenticação
 
-### 1. Autenticação
+### 1. Autenticação Estudante
 
-- **URL**: `/auth/login`
+- **URL**: `/auth/login/student`
 - **Método**: `POST`
 - **Body**:
 ```json
 {
     "cpf": "string",
     "password": "string"
+}
+```
+
+### 2. Autenticação Admin
+
+- **URL**: `/auth/login/admin`
+- **Método**: `POST`
+- **Body**:
+```json
+{
+  "username": "string",
+  "password": "string"
 }
 ```
 

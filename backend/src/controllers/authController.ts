@@ -52,7 +52,7 @@ export default class AuthController {
 
     try {
       const admin = await this.adminService.getAdminByUsername(username);
-
+  
       if (!admin) return res.status(400).json({ error: loginErrorMessage });
 
       const isPasswordCorrect = await bcrypt.compare(password, admin.senha);
