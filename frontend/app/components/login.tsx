@@ -5,11 +5,14 @@ import api from '../services/axiosClient';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import Image from 'next/image';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
-export default function LoginComponent() {
+export default function LoginComponent() {  
     const [cpf, setCpf] = useState('');
     const [senha, setSenha] = useState('');
     const [mensagemErro, setMensagemErro] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const router = useRouter();
 
 const handleLogin = async () => {
@@ -50,6 +53,10 @@ const handleLogin = async () => {
     }
 };
 
+
+    const toggleShowPassword = () => {
+        setShowPassword((prev) => !prev);
+    };
 
     return (
         <main className="flex h-screen">
@@ -93,12 +100,22 @@ const handleLogin = async () => {
 
                     <label className="block text-sm font-extrabold text-gray-600 mb-2">
                         Senha:
-                        <input
-                            className="w-full p-2 border rounded-md mb-4 shadow-md"
-                            type="password"
-                            value={senha}
-                            onChange={(e) => setSenha(e.target.value)}
-                        />
+                        <div className="relative">
+                            <input
+                                className="w-full p-2 border rounded-md mb-4 shadow-md"
+                                type={showPassword ? "text" : "password"}
+                                value={senha}
+                                onChange={(e) => setSenha(e.target.value)}
+                            />
+                            <button
+                                type="button"
+                                onClick={toggleShowPassword}
+                                className="absolute inset-y-0 right-2 flex items-center"
+                                style={{ top: '-30%' }}
+                            >
+                                <FontAwesomeIcon icon={showPassword ? faEye : faEyeSlash} />
+                            </button>
+                        </div>
                     </label>
 
                     <button
