@@ -6,7 +6,7 @@ export default class StudentRepository {
     const senha = student.documentos
       ? student.documentos.cpf.toString()
       : "user";
-    student.senha = await hashPassword(senha);
+      student.senha = await hashPassword(student.senha);
 
     const createdStudent = new StudentModel(student);
     return createdStudent.save();

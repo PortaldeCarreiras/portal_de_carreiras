@@ -15,38 +15,44 @@ export default function LoginComponent() {
     const [showPassword, setShowPassword] = useState(false);
     const router = useRouter();
 
-    const handleLogin = async () => {
-        try {
-            const response = await api.post('/auth/login', { cpf, password: senha }, {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
+const handleLogin = async () => {
+    try {
+        // Verifica qual tipo de login é necessário (Aluno ou Administrador)
+        let role: any
+        const loginRoute = role === 'admin' ? '/auth/login/admin' : '/auth/login/student';
 
-            if (response.data.token) {
-                const { cpf, nome, role } = response.data.model;
+        const response = await api.post(loginRoute, { cpf, password: senha }, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
 
-                console.log('Login successful:', response.data);
+        if (response.data.token) {
+            const { cpf, nome, role } = response.data.model;
 
-                // Display success message
-                Swal.fire("Logado com sucesso!");
+            console.log('Login successful:', response.data);
 
-                // Store the token in local storage or a cookie
-                localStorage.setItem('token', response.data.token);
+            // Exibe mensagem de sucesso
+            Swal.fire("Logado com sucesso!");
 
-                if (role === 'admin') {
-                    router.push("/administrador/excel");  // Rota de administrador
-                } else {
-                    router.push("/alunos");  // Rota de aluno
-                }
+            // Armazena o token no localStorage
+            localStorage.setItem('token', response.data.token);
+
+            // Redireciona baseado no papel do usuário
+            if (role === 'admin') {
+                router.push("/administrador/excel");  // Rota de administrador
             } else {
-                setMensagemErro("Erro ao obter token de acesso");
+                router.push("/alunos");  // Rota de aluno
             }
-        } catch (error) {
-            console.error('Erro no login:', error);
-            setMensagemErro('Usuário ou senha incorreto'); // Mensagem de erro geral
+        } else {
+            setMensagemErro("Erro ao obter token de acesso");
         }
-    };
+    } catch (error) {
+        console.error('Erro no login:', error);
+        setMensagemErro('Usuário ou senha incorreto');
+    }
+};
+
 
     const toggleShowPassword = () => {
         setShowPassword((prev) => !prev);

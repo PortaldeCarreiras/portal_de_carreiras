@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import axios from '../services/axiosClient';
+import axiosClient from '../services/axiosClient';
 import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
 import Image from 'next/image';
@@ -103,9 +103,9 @@ const UploadComponent = () => {
             Swal.fire('Por favor, selecione um arquivo primeiro.');
             return;
         }
-
+    
         setUploading(true);
-
+    
         const reader = new FileReader();
         reader.onload = async (e) => {
             const data = e.target?.result;
@@ -113,11 +113,14 @@ const UploadComponent = () => {
             const sheetName = workbook.SheetNames[0];
             const sheet = workbook.Sheets[sheetName];
             const rows = XLSX.utils.sheet_to_json(sheet);
-
+    
             try {
                 for (const row of rows) {
                     const student = mapRowToStudent(row);
-                    const response = await axios.post('/student', student);
+                    
+                    // Usando axiosClient para enviar a requisição POST
+                    const response = await axiosClient.post('/student', student);
+                    
                     console.log('Usuário criado:', response.data);
                 }
                 Swal.fire('Todos os usuários foram criados com sucesso!');

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import axiosClient from '../services/axiosClient';  // Importe o axiosClient
 import Swal from 'sweetalert2';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -20,10 +21,13 @@ export default function FormularioComponent() {
 
     const obterPerguntasAtivas = async () => {
         try {
-            const response = await fetch('http://localhost:3001/question'); // Endpoint para perguntas ativas
-            const data: Pergunta[] = await response.json();
-            console.log(data)
-
+            // Usando o axiosClient para fazer a requisição GET
+            const response = await axiosClient.get('/question');  // Note que a baseURL já está definida em axiosClient
+            
+            // A resposta do axios será acessada via response.data
+            const data: Pergunta[] = response.data;
+            console.log(data);
+    
             // Organizar perguntas por categorias
             const categoriasMapeadas = data.reduce((acc: { [key: string]: Pergunta[] }, pergunta: Pergunta) => {
                 const { categoria_pergunta } = pergunta;
@@ -33,7 +37,7 @@ export default function FormularioComponent() {
                 acc[categoria_pergunta].push(pergunta);
                 return acc;
             }, {});
-
+    
             // Definir as categorias e a primeira categoria selecionada
             setCategorias(Object.keys(categoriasMapeadas));
             setPerguntas(categoriasMapeadas);
@@ -59,19 +63,13 @@ export default function FormularioComponent() {
     // Envia as respostas ao backend
     const handleSubmit = async () => {
         try {
-            // Envia as respostas ao backend
-            const response = await fetch('http://localhost:3001/answer', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`, // Token de autenticação
-                },
-                body: JSON.stringify({ respostas }),
-            });
+            // Envia as respostas ao backend usando o axiosClient
+            const response = await axiosClient.post('/answer', { respostas });
+    
             console.log(response);
-            console.log(respostas)
-
-            if (response.ok) {
+            console.log(respostas);
+    
+            if (response.status === 200) {
                 Swal.fire({
                     icon: 'success',
                     title: 'Respostas Salvas!',
@@ -88,6 +86,12 @@ export default function FormularioComponent() {
             }
         } catch (error) {
             console.error('Erro ao salvar as respostas:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'Ocorreu um erro ao enviar as respostas. Verifique o console para mais detalhes.',
+                confirmButtonText: 'OK',
+            });
         }
     };
 
