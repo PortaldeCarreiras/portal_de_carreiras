@@ -12,6 +12,10 @@ export default class StudentService {
     return this.studentRepository.create(student);
   }
 
+  async createStudentsBatch(students: Student[]): Promise<Student[]> {
+    return this.studentRepository.createBatch(students);
+  }
+  
   async getStudentById(id: string): Promise<Student | null> {
     return this.studentRepository.findById(id);
   }
