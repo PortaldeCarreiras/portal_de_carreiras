@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation'; // Importa o useRouter
+import { useRouter } from 'next/navigation';
 
 interface Data {
     [key: number]: string[];
@@ -12,9 +12,12 @@ export default function FormularioComponent() {
     const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [searchQuery, setSearchQuery] = useState<string>('');
+    const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
+    const [selectedForm, setSelectedForm] = useState<string | null>(null);
+    const [formStatus, setFormStatus] = useState<{ [key: string]: boolean }>({}); // Controle do status de cada formulário
     const totalPages = 10;
 
-    const router = useRouter(); // Inicializa o roteador
+    const router = useRouter();
 
     const handleDropdownToggle = (index: number) => {
         setDropdownOpen(dropdownOpen === index ? null : index);
@@ -24,6 +27,31 @@ export default function FormularioComponent() {
         if (page > 0 && page <= totalPages) {
             setCurrentPage(page);
         }
+    };
+
+    const handleEditForm = (formulario: string) => {
+        router.push(`/administrador/forms/editar/${formulario}`);
+    };
+
+    const handleDeactivate = (formulario: string) => {
+        setSelectedForm(formulario);
+        setShowConfirmation(true);
+    };
+
+    const confirmDeactivate = () => {
+        if (selectedForm) {
+            setFormStatus((prevStatus) => ({
+                ...prevStatus,
+                [selectedForm]: false, // Desativa o formulário
+            }));
+        }
+        setShowConfirmation(false);
+        setSelectedForm(null);
+    };
+
+    const cancelDeactivate = () => {
+        setShowConfirmation(false);
+        setSelectedForm(null);
     };
 
     const data: Data = {
@@ -79,7 +107,7 @@ export default function FormularioComponent() {
                     <div className="flex items-center">
                         <button
                             className="text-black font-bold text-xl mr-2"
-                            onClick={() => router.push('/administrador/forms')}
+                            onClick={() => router.push('/administrador/new_forms')}
                         >
                             +
                         </button>
@@ -101,6 +129,7 @@ export default function FormularioComponent() {
                     <thead>
                         <tr className="bg-[#D32F2F] text-black">
                             <th className="p-2">Formulário</th>
+                            <th className="p-2">Situação</th>
                             <th className="p-2">Ações</th>
                         </tr>
                     </thead>
@@ -109,6 +138,9 @@ export default function FormularioComponent() {
                             paginatedData.map((formulario: string, index: number) => (
                                 <tr key={index} className="bg-gray-200 border-b border-[#D32F2F]">
                                     <td className="p-2 text-center text-black">{formulario}</td>
+                                    <td className="p-2 text-center text-black">
+                                        {formStatus[formulario] ? 'Ativado' : 'Desativado'}
+                                    </td>
                                     <td className="p-2 text-center relative">
                                         <button
                                             onClick={() => handleDropdownToggle(index)}
@@ -116,12 +148,43 @@ export default function FormularioComponent() {
                                         >
                                             Ações
                                         </button>
+                                        {dropdownOpen === index && (
+                                            <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 w-40 bg-white border border-[#D32F2F] rounded shadow-md z-50">
+                                                <ul className="text-center">
+                                                    <li
+                                                        className="px-4 py-2 hover:bg-[#FFCDD2] cursor-pointer text-black"
+                                                        onClick={() => {
+                                                            handleEditForm(formulario);
+                                                            setDropdownOpen(null);
+                                                        }}
+                                                    >
+                                                        Editar
+                                                    </li>
+                                                    <li
+                                                        className="px-4 py-2 hover:bg-[#FFCDD2] cursor-pointer text-black"
+                                                        onClick={() => {
+                                                            if (formStatus[formulario]) {
+                                                                handleDeactivate(formulario);
+                                                            } else {
+                                                                setFormStatus((prevStatus) => ({
+                                                                    ...prevStatus,
+                                                                    [formulario]: true,
+                                                                }));
+                                                                setDropdownOpen(null);
+                                                            }
+                                                        }}
+                                                    >
+                                                        {formStatus[formulario] ? 'Desativar' : 'Ativar'}
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        )}
                                     </td>
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={2} className="p-4 text-center text-black">
+                                <td colSpan={3} className="p-4 text-center text-black">
                                     Nenhum formulário encontrado
                                 </td>
                             </tr>
@@ -129,50 +192,61 @@ export default function FormularioComponent() {
                     </tbody>
                 </table>
 
-                {dropdownOpen !== null && (
-                    <>
-                        <div className="fixed inset-0 bg-black bg-opacity-50 z-40"></div>
-                        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 bg-white border border-[#D32F2F] rounded shadow-md z-50">
-                            <button
-                                onClick={() => setDropdownOpen(null)}
-                                className="absolute top-2 right-2 text-black font-bold text-lg"
-                            >
-                                ✖
-                            </button>
-                            <ul className="text-center mt-6">
-                                <li className="px-4 py-2 hover:bg-[#FFCDD2] cursor-pointer text-black">Editar</li>
-                                <li className="px-4 py-2 hover:bg-[#FFCDD2] cursor-pointer text-black">Desativar</li>
-                            </ul>
+                {showConfirmation && (
+                    <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-50">
+                        <div className="bg-white p-6 rounded shadow-md text-center">
+                            <p className="text-black text-lg mb-4">Tem certeza que deseja desativar "{selectedForm}"?</p>
+                            <div className="flex justify-center space-x-4">
+                                <button
+                                    onClick={confirmDeactivate}
+                                    className="bg-[#D32F2F] text-white px-4 py-2 rounded hover:bg-[#B71C1C]"
+                                >
+                                    Sim
+                                </button>
+                                <button
+                                    onClick={cancelDeactivate}
+                                    className="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400"
+                                >
+                                    Não
+                                </button>
+                            </div>
                         </div>
-                    </>
+                    </div>
                 )}
 
-                <div className="flex justify-center mt-4 space-x-2">
-                    <button
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
-                        className="px-3 py-1 rounded text-black"
-                    >
-                        ◄
-                    </button>
-                    {visiblePages.map((page, index) => (
+                <div className="mt-4 flex justify-between items-center">
+                    <div className="text-black">
+                        Página {currentPage} de {totalFilteredPages}
+                    </div>
+                    <div>
                         <button
-                            key={index}
-                            onClick={() => handlePageChange(page)}
-                            className={`px-3 py-1 rounded ${
-                                currentPage === page ? 'font-bold text-[#D32F2F]' : 'text-black'
-                            }`}
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className="px-4 py-2 bg-[#D32F2F] text-white rounded-l disabled:bg-gray-300"
                         >
-                            {page}
+                            Anterior
                         </button>
-                    ))}
-                    <button
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage === totalFilteredPages}
-                        className="px-3 py-1 rounded text-black"
-                    >
-                        ►
-                    </button>
+                        {visiblePages.map((page) => (
+                            <button
+                                key={page}
+                                onClick={() => handlePageChange(page)}
+                                className={`px-4 py-2 ${
+                                    page === currentPage
+                                        ? 'bg-[#B71C1C] text-white'
+                                        : 'bg-[#D32F2F] text-black'
+                                }`}
+                            >
+                                {page}
+                            </button>
+                        ))}
+                        <button
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalFilteredPages}
+                            className="px-4 py-2 bg-[#D32F2F] text-white rounded-r disabled:bg-gray-300"
+                        >
+                            Próximo
+                        </button>
+                    </div>
                 </div>
             </section>
         </main>
