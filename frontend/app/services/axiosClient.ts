@@ -10,8 +10,12 @@ const instance = axios.create({
 
 instance.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
+    const id = localStorage.getItem('id'); // Supondo que o ID esteja no localStorage
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+    }
+    if (id) {
+        config.headers['X-User-ID'] = id; // Adiciona o ID ao cabeçalho
     }
     return config;
 });

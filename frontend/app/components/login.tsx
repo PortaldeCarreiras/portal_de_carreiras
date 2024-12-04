@@ -28,7 +28,7 @@ const handleLogin = async () => {
         });
 
         if (response.data.token) {
-            const { cpf, nome, role } = response.data.model;
+            const { cpf, nome, role, id } = response.data.model;
 
             console.log('Login successful:', response.data);
 
@@ -37,6 +37,7 @@ const handleLogin = async () => {
 
             // Armazena o token no localStorage
             localStorage.setItem('token', response.data.token);
+            localStorage.setItem('id', id);
 
             // Redireciona baseado no papel do usuário
             if (role === 'admin') {

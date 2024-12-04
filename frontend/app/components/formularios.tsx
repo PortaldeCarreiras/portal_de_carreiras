@@ -18,6 +18,7 @@ export default function FormularioComponent() {
     const [categorias, setCategorias] = useState<string[]>([]); // Categorias das perguntas ativas
     const [respostas, setRespostas] = useState<{ [key: string]: string }>({}); // Respostas do aluno
     const [categoriaSelecionada, setCategoriaSelecionada] = useState<string | null>(null); // Categoria selecionada
+    const [userId, setUserId] = useState<string | null>(null);
 
     const obterPerguntasAtivas = async () => {
         try {
@@ -47,6 +48,16 @@ export default function FormularioComponent() {
         }
     };
 
+    useEffect(() => {
+        const id = localStorage.getItem('id');
+        if (id) {
+            setUserId(id);
+            console.log('User ID recuperado:', id);
+        } else {
+            console.warn('Nenhum ID encontrado no localStorage.');
+        }
+    }, []);
+
     // Chama a função para buscar perguntas ativas ao carregar o componente
     useEffect(() => {
         obterPerguntasAtivas();
@@ -60,14 +71,36 @@ export default function FormularioComponent() {
         }));
     };
 
-    // Envia as respostas ao backend
     const handleSubmit = async () => {
         try {
+            // Certifique-se de que o `userId` foi recuperado
+            if (!userId) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'ID do aluno não encontrado. Por favor, faça login novamente.',
+                    confirmButtonText: 'OK',
+                });
+                return;
+            }
+    
+            // Obter data atual no formato ISO
+            const dataAtual = new Date().toISOString();
+    
+            const respostasArray = Object.entries(respostas).map(([id_pergunta, resposta]) => ({
+                id_aluno: userId,
+                id_pergunta,
+                resposta,
+                version: "1.0",
+                data_resposta: new Date().toISOString(),
+            }));
+            
+            console.log(respostasArray); // Verifique a estrutura antes de enviar
+
             // Envia as respostas ao backend usando o axiosClient
-            const response = await axiosClient.post('/answer', { respostas });
+            const response = await axiosClient.post('/answer', { respostas: respostasArray });
     
             console.log(response);
-            console.log(respostas);
     
             if (response.status === 200) {
                 Swal.fire({
