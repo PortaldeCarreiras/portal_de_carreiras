@@ -19,6 +19,25 @@ export default class StudentController {
     }
   };
 
+  public createBatchStudents = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const students: Student[] = req.body; // Espera-se um array de estudantes
+      if (!Array.isArray(students)) {
+        res
+          .status(400)
+          .json({ error: "O corpo da requisição deve ser um array de estudantes" });
+        return;
+      }
+
+      const createdStudents = await this.StudentService.createStudentsBatch(
+        students
+      );
+      res.status(201).json(createdStudents);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  };
+
   public getStudentById = async (
     req: Request,
     res: Response

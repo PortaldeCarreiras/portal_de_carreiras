@@ -6,10 +6,25 @@ export default class StudentRepository {
     const senha = student.documentos
       ? student.documentos.cpf.toString()
       : "user";
-    student.senha = await hashPassword(senha);
+      student.senha = await hashPassword(student.senha);
 
     const createdStudent = new StudentModel(student);
     return createdStudent.save();
+  }
+
+  // Novo método para criar múltiplos estudantes em lote
+  async createBatch(students: Student[]): Promise<Student[]> {
+    // Adiciona a senha para cada estudante e aplica hash
+    const studentsWithHashedPasswords = await Promise.all(
+        students.map(async (student) => {
+            student.senha = await hashPassword(student.documentos?.cpf.toString() || "user");
+            return student;
+        })
+    );
+
+    // Usa o método insertMany para salvar em lote
+    const createdStudents = await StudentModel.insertMany(studentsWithHashedPasswords);
+    return createdStudents;
   }
 
   async findById(id: string): Promise<Student | null> {
