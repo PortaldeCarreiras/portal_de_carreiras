@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import axios from '../services/axiosClient';
+import axiosClient from '../services/axiosClient';
 import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
 import Image from 'next/image';
@@ -12,6 +12,7 @@ const UploadComponent = () => {
     const [uploading, setUploading] = useState(false);
     const router = useRouter();
 
+    
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             setFile(e.target.files[0]);
@@ -29,6 +30,10 @@ const UploadComponent = () => {
 
     // Json do estudante
     const mapRowToStudent = (row: any) => {
+        if (!row.nome || !row.email) {
+            console.error(`Dados inválidos na linha: ${JSON.stringify(row)}`);
+            return null; // Ignora registros inválidos
+        }
         return {
             nome: row.nome || '',
             identidade: {
@@ -96,16 +101,18 @@ const UploadComponent = () => {
             },
         };
     };
+    
 
     // xml
     const handleUpload = async () => {
+
         if (!file) {
             Swal.fire('Por favor, selecione um arquivo primeiro.');
             return;
         }
-
+    
         setUploading(true);
-
+    
         const reader = new FileReader();
         reader.onload = async (e) => {
             const data = e.target?.result;
@@ -113,23 +120,24 @@ const UploadComponent = () => {
             const sheetName = workbook.SheetNames[0];
             const sheet = workbook.Sheets[sheetName];
             const rows = XLSX.utils.sheet_to_json(sheet);
-
+    
+            const students = rows.map(mapRowToStudent).filter(student => student !== null);
+    
             try {
-                for (const row of rows) {
-                    const student = mapRowToStudent(row);
-                    const response = await axios.post('/student', student);
-                    console.log('Usuário criado:', response.data);
-                }
+                // Envia todos os alunos em uma única requisição
+                const response = await axiosClient.post('/students/batch', students);
+                console.log('Usuários criados:', response.data);
                 Swal.fire('Todos os usuários foram criados com sucesso!');
             } catch (error) {
-                console.error('Erro ao criar usuário:', error);
-                Swal.fire('Erro ao criar usuário. Verifique o console para mais detalhes.');
+                console.error('Erro ao criar usuários:', error);
+                Swal.fire('Erro ao criar usuários. Verifique o console para mais detalhes.');
             } finally {
                 setUploading(false);
             }
         };
         reader.readAsBinaryString(file);
     };
+    
 
     const handleLoginRedirect = () => {
         router.push('/');

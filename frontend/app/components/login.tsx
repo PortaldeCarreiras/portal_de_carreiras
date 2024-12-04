@@ -5,45 +5,57 @@ import api from '../services/axiosClient';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import Image from 'next/image';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
-export default function LoginComponent() {
+export default function LoginComponent() {  
     const [cpf, setCpf] = useState('');
     const [senha, setSenha] = useState('');
     const [mensagemErro, setMensagemErro] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const router = useRouter();
 
-    const handleLogin = async () => {
-        try {
-            const response = await api.post('/auth/login', { cpf, password: senha }, {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
+const handleLogin = async () => {
+    try {
+        // Verifica qual tipo de login é necessário (Aluno ou Administrador)
+        let role: any
+        const loginRoute = role === 'admin' ? '/auth/login/admin' : '/auth/login/student';
 
-            if (response.data.token) {
-                const { cpf, nome, role } = response.data.model;
+        const response = await api.post(loginRoute, { cpf, password: senha }, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
 
-                console.log('Login successful:', response.data);
+        if (response.data.token) {
+            const { cpf, nome, role } = response.data.model;
 
-                // Display success message
-                Swal.fire("Logado com sucesso!");
+            console.log('Login successful:', response.data);
 
-                // Store the token in local storage or a cookie
-                localStorage.setItem('token', response.data.token);
+            // Exibe mensagem de sucesso
+            Swal.fire("Logado com sucesso!");
 
-                if (role === 'admin') {
-                    router.push("/administrador/excel");  // Rota de administrador
-                } else {
-                    router.push("/alunos");  // Rota de aluno
-                }
+            // Armazena o token no localStorage
+            localStorage.setItem('token', response.data.token);
 
+            // Redireciona baseado no papel do usuário
+            if (role === 'admin') {
+                router.push("/administrador/excel");  // Rota de administrador
             } else {
-                setMensagemErro("Erro ao obter token de acesso");
+                router.push("/alunos");  // Rota de aluno
             }
-        } catch (error) {
-            console.error('Erro no login:', error);
-            setMensagemErro('Usuário ou senha incorreto'); // General error message
+        } else {
+            setMensagemErro("Erro ao obter token de acesso");
         }
+    } catch (error) {
+        console.error('Erro no login:', error);
+        setMensagemErro('Usuário ou senha incorreto');
+    }
+};
+
+
+    const toggleShowPassword = () => {
+        setShowPassword((prev) => !prev);
     };
 
     return (
@@ -88,12 +100,22 @@ export default function LoginComponent() {
 
                     <label className="block text-sm font-extrabold text-gray-600 mb-2">
                         Senha:
-                        <input
-                            className="w-full p-2 border rounded-md mb-4 shadow-md"
-                            type="password"
-                            value={senha}
-                            onChange={(e) => setSenha(e.target.value)}
-                        />
+                        <div className="relative">
+                            <input
+                                className="w-full p-2 border rounded-md mb-4 shadow-md"
+                                type={showPassword ? "text" : "password"}
+                                value={senha}
+                                onChange={(e) => setSenha(e.target.value)}
+                            />
+                            <button
+                                type="button"
+                                onClick={toggleShowPassword}
+                                className="absolute inset-y-0 right-2 flex items-center"
+                                style={{ top: '-30%' }}
+                            >
+                                <FontAwesomeIcon icon={showPassword ? faEye : faEyeSlash} />
+                            </button>
+                        </div>
                     </label>
 
                     <button
