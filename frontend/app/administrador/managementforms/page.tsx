@@ -1,90 +1,118 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import axiosClient from '../../services/axiosClient';
+import Swal from 'sweetalert2';
 
-interface Data {
-    [key: number]: string[];
+interface Question {
+    _id: string;
+    pergunta: string;
+    status_pergunta: boolean;
+    categoria_pergunta: string;
 }
 
-export default function FormularioComponent() {
-    const [dropdownOpen, setDropdownOpen] = useState<number | null>(null);
-    const [currentPage, setCurrentPage] = useState<number>(1);
-    const [searchQuery, setSearchQuery] = useState<string>('');
-    const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
-    const [selectedForm, setSelectedForm] = useState<string | null>(null);
-    const [formStatus, setFormStatus] = useState<{ [key: string]: boolean }>({}); // Controle do status de cada formulário
-    const totalPages = 10;
-
+export default function ManagementForms() {
+    const [questions, setQuestions] = useState<Question[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
+    const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
+    const [showEditModal, setShowEditModal] = useState(false);
     const router = useRouter();
 
-    const handleDropdownToggle = (index: number) => {
-        setDropdownOpen(dropdownOpen === index ? null : index);
-    };
-
-    const handlePageChange = (page: number) => {
-        if (page > 0 && page <= totalPages) {
-            setCurrentPage(page);
+    // Busca todas as questões do backend
+    const fetchQuestions = async () => {
+        try {
+            setIsLoading(true);
+            const response = await axiosClient.get('/question');
+            setQuestions(response.data);
+        } catch (error) {
+            console.error('Erro ao buscar questões:', error);
+            Swal.fire('Erro', 'Não foi possível carregar as questões.', 'error');
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const handleEditForm = (formulario: string) => {
-        router.push(`/administrador/forms/editar/${formulario}`);
-    };
+    useEffect(() => {
+        fetchQuestions();
+    }, []);
 
-    const handleDeactivate = (formulario: string) => {
-        setSelectedForm(formulario);
-        setShowConfirmation(true);
-    };
+    // Filtrar questões com base no campo de busca
+    const filteredQuestions = questions.filter((question) =>
+        question.pergunta.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
-    const confirmDeactivate = () => {
-        if (selectedForm) {
-            setFormStatus((prevStatus) => ({
-                ...prevStatus,
-                [selectedForm]: false, // Desativa o formulário
-            }));
+    // Alternar status (Ativar/Desativar questão)
+    const toggleStatus = async (question: Question) => {
+        try {
+            const updatedQuestion = { ...question, status_pergunta: !question.status_pergunta };
+            await axiosClient.put(`/question/${question._id}`, updatedQuestion);
+
+            Swal.fire(
+                'Atualizado!',
+                `A pergunta foi ${updatedQuestion.status_pergunta ? 'ativada' : 'desativada'} com sucesso.`,
+                'success'
+            );
+
+            // Atualiza a lista localmente
+            setQuestions((prevQuestions) =>
+                prevQuestions.map((q) =>
+                    q._id === question._id ? updatedQuestion : q
+                )
+            );
+        } catch (error) {
+            console.error('Erro ao alterar status da questão:', error);
+            Swal.fire('Erro', 'Não foi possível atualizar a questão.', 'error');
         }
-        setShowConfirmation(false);
-        setSelectedForm(null);
     };
 
-    const cancelDeactivate = () => {
-        setShowConfirmation(false);
-        setSelectedForm(null);
+    // Abrir modal de edição com os dados da questão selecionada
+    const handleEditQuestion = (question: Question) => {
+        setSelectedQuestion(question);
+        setShowEditModal(true);
     };
 
-    const data: Data = {
-        1: ['Formulário A1', 'Formulário A2', 'Formulário A3', 'Formulário A4', 'Formulário A5', 'Formulário A6', 'Formulário A7', 'Formulário A8'],
-        2: ['Formulário B1', 'Formulário B2', 'Formulário B3', 'Formulário B4', 'Formulário B5', 'Formulário B6', 'Formulário B7', 'Formulário B8'],
-        3: ['Formulário C1', 'Formulário C2', 'Formulário C3', 'Formulário C4'],
+    // Fechar modal de edição
+    const closeEditModal = () => {
+        setSelectedQuestion(null);
+        setShowEditModal(false);
     };
 
-    const allData = Object.values(data).flat();
+    // Atualizar questão
+    const saveQuestion = async () => {
+        if (selectedQuestion) {
+            try {
+                await axiosClient.put(`/question/${selectedQuestion._id}`, selectedQuestion);
 
-    const filteredData = allData.filter((item) =>
-        item.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+                Swal.fire('Atualizado!', 'A pergunta foi editada com sucesso.', 'success');
 
-    const itemsPerPage = 8;
-    const paginatedData = filteredData.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
+                // Atualiza a lista localmente
+                setQuestions((prevQuestions) =>
+                    prevQuestions.map((q) =>
+                        q._id === selectedQuestion._id ? selectedQuestion : q
+                    )
+                );
 
-    const totalFilteredPages = Math.ceil(filteredData.length / itemsPerPage);
+                closeEditModal();
+            } catch (error) {
+                console.error('Erro ao atualizar questão:', error);
+                Swal.fire('Erro', 'Não foi possível atualizar a questão.', 'error');
+            }
+        }
+    };
 
-    const visiblePages =
-        totalFilteredPages <= 3
-            ? Array.from({ length: totalFilteredPages }, (_, i) => i + 1)
-            : currentPage === 1
-            ? [1, 2, 3]
-            : currentPage === totalFilteredPages
-            ? [totalFilteredPages - 2, totalFilteredPages - 1, totalFilteredPages]
-            : [currentPage - 1, currentPage, currentPage + 1];
+    // Logout do usuário
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('id_aluno');
+        router.push('/');
+    };
 
     return (
-        <main className="h-screen bg-white">
+        <main className="h-screen bg-gray-100">
+            {/* Navbar */}
             <nav className="bg-slate-100 shadow-md p-4 flex justify-between items-center">
                 <div className="flex items-center">
                     <Image
@@ -94,161 +122,137 @@ export default function FormularioComponent() {
                         width={64}
                         height={64}
                     />
+                    <span className="ml-3 text-xl font-bold text-gray-800">Administração</span>
                 </div>
                 <div className="flex space-x-4">
-                    <button onClick={() => router.push('/')} className="text-black font-bold">Home</button>
-                    <button onClick={() => router.push('/administrador/dashboard')} className="text-black font-bold">Dashboard</button>
+                    <button onClick={handleLogout} className="text-black font-bold">
+                        Logout
+                    </button>
+                    <button onClick={() => router.push('/administrador/dashboard')} className="text-black font-bold">
+                        Dashboard
+                    </button>
+                    <button onClick={() => router.push('/administrador/excel')} className="text-black font-bold">
+                        Excel
+                    </button>
                 </div>
             </nav>
 
-            <section className="p-4">
-                <div className="flex justify-between items-center mb-4">
-                    <span className="text-black text-2xl font-bold">Formulários</span>
-                    <div className="flex items-center">
+            <section className="p-6 flex flex-col items-center">
+                {/* Search Bar and Add Question Button */}
+                <div className="w-full max-w-6xl flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+                    <span className="text-black text-2xl font-bold">Questões</span>
+                    <div className="flex items-center gap-4">
                         <button
-                            className="text-black font-bold text-xl mr-2"
-                            onClick={() => router.push('/administrador/new_forms')}
+                            className="text-white bg-green-500 font-bold px-4 py-2 rounded shadow-md hover:bg-green-600"
+                            onClick={() => router.push('/administrador/forms')}
                         >
-                            +
+                            + Nova Pergunta
                         </button>
                         <input
                             type="text"
                             placeholder="Pesquisar..."
                             value={searchQuery}
-                            onChange={(e) => {
-                                setSearchQuery(e.target.value);
-                                setCurrentPage(1);
-                            }}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                             className="border-2 border-[#D32F2F] bg-[#FFCDD2] p-2 rounded focus:outline-none focus:border-[#B71C1C] text-black"
                         />
-                        <button className="ml-2 text-black font-bold text-xl">🔍</button>
                     </div>
                 </div>
 
-                <table className="w-full border border-[#D32F2F]">
-                    <thead>
-                        <tr className="bg-[#D32F2F] text-black">
-                            <th className="p-2">Formulário</th>
-                            <th className="p-2">Situação</th>
-                            <th className="p-2">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {paginatedData.length > 0 ? (
-                            paginatedData.map((formulario: string, index: number) => (
-                                <tr key={index} className="bg-gray-200 border-b border-[#D32F2F]">
-                                    <td className="p-2 text-center text-black">{formulario}</td>
-                                    <td className="p-2 text-center text-black">
-                                        {formStatus[formulario] ? 'Ativado' : 'Desativado'}
-                                    </td>
-                                    <td className="p-2 text-center relative">
-                                        <button
-                                            onClick={() => handleDropdownToggle(index)}
-                                            className="bg-[#D32F2F] text-black px-4 py-1 rounded hover:bg-[#B71C1C]"
-                                        >
-                                            Ações
-                                        </button>
-                                        {dropdownOpen === index && (
-                                            <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 w-40 bg-white border border-[#D32F2F] rounded shadow-md z-50">
-                                                <ul className="text-center">
-                                                    <li
-                                                        className="px-4 py-2 hover:bg-[#FFCDD2] cursor-pointer text-black"
-                                                        onClick={() => {
-                                                            handleEditForm(formulario);
-                                                            setDropdownOpen(null);
-                                                        }}
-                                                    >
-                                                        Editar
-                                                    </li>
-                                                    <li
-                                                        className="px-4 py-2 hover:bg-[#FFCDD2] cursor-pointer text-black"
-                                                        onClick={() => {
-                                                            if (formStatus[formulario]) {
-                                                                handleDeactivate(formulario);
-                                                            } else {
-                                                                setFormStatus((prevStatus) => ({
-                                                                    ...prevStatus,
-                                                                    [formulario]: true,
-                                                                }));
-                                                                setDropdownOpen(null);
-                                                            }
-                                                        }}
-                                                    >
-                                                        {formStatus[formulario] ? 'Desativar' : 'Ativar'}
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        )}
+                {/* Questions Table */}
+                <div className="w-full max-w-6xl overflow-x-auto">
+                    <table className="w-full border border-[#D32F2F] table-fixed">
+                        <thead>
+                            <tr className="bg-[#D32F2F] text-white">
+                                <th className="p-2 w-2/5">Questão</th>
+                                <th className="p-2 w-1/5">Categoria</th>
+                                <th className="p-2 w-1/5">Situação</th>
+                                <th className="p-2 w-1/5">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredQuestions.length > 0 ? (
+                                filteredQuestions.map((question) => (
+                                    <tr key={question._id} className="bg-gray-200 border-b border-[#D32F2F]">
+                                        <td className="p-2 text-black truncate">{question.pergunta}</td>
+                                        <td className="p-2 text-black">{question.categoria_pergunta}</td>
+                                        <td className="p-2 text-black text-center">
+                                            {question.status_pergunta ? 'Ativada' : 'Desativada'}
+                                        </td>
+                                        <td className="p-2 text-center flex justify-around">
+                                            <button
+                                                onClick={() => handleEditQuestion(question)}
+                                                className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-700"
+                                            >
+                                                Editar
+                                            </button>
+                                            <button
+                                                onClick={() => toggleStatus(question)}
+                                                className={`px-3 py-1 rounded ${question.status_pergunta
+                                                    ? 'bg-red-500 hover:bg-red-700 text-white'
+                                                    : 'bg-green-500 hover:bg-green-700 text-white'
+                                                    }`}
+                                            >
+                                                {question.status_pergunta ? 'Desativar' : 'Ativar'}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={4} className="p-4 text-center text-black">
+                                        Nenhuma questão encontrada
                                     </td>
                                 </tr>
-                            ))
-                        ) : (
-                            <tr>
-                                <td colSpan={3} className="p-4 text-center text-black">
-                                    Nenhum formulário encontrado
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
-
-                {showConfirmation && (
-                    <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-50">
-                        <div className="bg-white p-6 rounded shadow-md text-center">
-                            <p className="text-black text-lg mb-4">Tem certeza que deseja desativar "{selectedForm}"?</p>
-                            <div className="flex justify-center space-x-4">
-                                <button
-                                    onClick={confirmDeactivate}
-                                    className="bg-[#D32F2F] text-white px-4 py-2 rounded hover:bg-[#B71C1C]"
-                                >
-                                    Sim
-                                </button>
-                                <button
-                                    onClick={cancelDeactivate}
-                                    className="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400"
-                                >
-                                    Não
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                <div className="mt-4 flex justify-between items-center">
-                    <div className="text-black">
-                        Página {currentPage} de {totalFilteredPages}
-                    </div>
-                    <div>
-                        <button
-                            onClick={() => handlePageChange(currentPage - 1)}
-                            disabled={currentPage === 1}
-                            className="px-4 py-2 bg-[#D32F2F] text-white rounded-l disabled:bg-gray-300"
-                        >
-                            Anterior
-                        </button>
-                        {visiblePages.map((page) => (
-                            <button
-                                key={page}
-                                onClick={() => handlePageChange(page)}
-                                className={`px-4 py-2 ${
-                                    page === currentPage
-                                        ? 'bg-[#B71C1C] text-white'
-                                        : 'bg-[#D32F2F] text-black'
-                                }`}
-                            >
-                                {page}
-                            </button>
-                        ))}
-                        <button
-                            onClick={() => handlePageChange(currentPage + 1)}
-                            disabled={currentPage === totalFilteredPages}
-                            className="px-4 py-2 bg-[#D32F2F] text-white rounded-r disabled:bg-gray-300"
-                        >
-                            Próximo
-                        </button>
-                    </div>
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </section>
+
+            {/* Edit Modal */}
+            {showEditModal && selectedQuestion && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white p-6 rounded shadow-md w-full max-w-2xl">
+                        <h2 className="text-lg font-bold mb-4">Editar Questão</h2>
+                        <label className="block mb-2 text-black">
+                            Pergunta:
+                            <input
+                                type="text"
+                                value={selectedQuestion.pergunta}
+                                onChange={(e) =>
+                                    setSelectedQuestion({ ...selectedQuestion, pergunta: e.target.value })
+                                }
+                                className="w-full border border-gray-300 rounded-md p-2 mt-1 text-black"
+                            />
+                        </label>
+                        <label className="block mb-2 text-black">
+                            Categoria:
+                            <input
+                                type="text"
+                                value={selectedQuestion.categoria_pergunta}
+                                onChange={(e) =>
+                                    setSelectedQuestion({ ...selectedQuestion, categoria_pergunta: e.target.value })
+                                }
+                                className="w-full border border-gray-300 rounded-md p-2 mt-1 text-black"
+                            />
+                        </label>
+                        <div className="flex justify-end mt-4">
+                            <button
+                                onClick={closeEditModal}
+                                className="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400 mr-2"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={saveQuestion}
+                                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                            >
+                                Salvar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </main>
     );
 }

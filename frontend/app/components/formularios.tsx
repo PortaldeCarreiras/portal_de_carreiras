@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import axiosClient from '../services/axiosClient';  // Importe o axiosClient
+import axiosClient from '../services/axiosClient';
 import Swal from 'sweetalert2';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import router from 'next/router';
 
 interface Pergunta {
     _id: string;
@@ -13,23 +12,40 @@ interface Pergunta {
     categoria_pergunta: string;
 }
 
-export default function FormularioComponent() {
-    const [perguntas, setPerguntas] = useState<{ [key: string]: Pergunta[] }>({}); // Perguntas organizadas por categoria
-    const [categorias, setCategorias] = useState<string[]>([]); // Categorias das perguntas ativas
-    const [respostas, setRespostas] = useState<{ [key: string]: string }>({}); // Respostas do aluno
-    const [categoriaSelecionada, setCategoriaSelecionada] = useState<string | null>(null); // Categoria selecionada
+interface Resposta {
+    id_pergunta: string;
+    resposta: string;
+}
 
-    const obterPerguntasAtivas = async () => {
+export default function FormularioComponent() {
+    const [perguntas, setPerguntas] = useState<{ [key: string]: Pergunta[] }>({});
+    const [categorias, setCategorias] = useState<string[]>([]);
+    const [respostas, setRespostas] = useState<{ [key: string]: string }>({});
+    const [categoriaSelecionada, setCategoriaSelecionada] = useState<string | null>(null);
+    const router = useRouter();
+
+    const idAluno = localStorage.getItem('id_aluno'); // Certifique-se de que o ID do aluno está armazenado
+
+    const obterPerguntasERespostas = async () => {
+
+        if (!idAluno) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'ID do aluno não encontrado. Faça login novamente.',
+                confirmButtonText: 'OK',
+            });
+            router.push('/');
+            return;
+        }
+
         try {
-            // Usando o axiosClient para fazer a requisição GET
-            const response = await axiosClient.get('/question');  // Note que a baseURL já está definida em axiosClient
-            
-            // A resposta do axios será acessada via response.data
-            const data: Pergunta[] = response.data;
-            console.log(data);
-    
-            // Organizar perguntas por categorias
-            const categoriasMapeadas = data.reduce((acc: { [key: string]: Pergunta[] }, pergunta: Pergunta) => {
+            // Obter perguntas
+            const perguntasResponse = await axiosClient.get('/question/active');
+            const perguntasData: Pergunta[] = perguntasResponse.data;
+
+            // Mapear perguntas por categorias
+            const categoriasMapeadas = perguntasData.reduce((acc: { [key: string]: Pergunta[] }, pergunta: Pergunta) => {
                 const { categoria_pergunta } = pergunta;
                 if (!acc[categoria_pergunta]) {
                     acc[categoria_pergunta] = [];
@@ -37,59 +53,83 @@ export default function FormularioComponent() {
                 acc[categoria_pergunta].push(pergunta);
                 return acc;
             }, {});
-    
-            // Definir as categorias e a primeira categoria selecionada
+
             setCategorias(Object.keys(categoriasMapeadas));
             setPerguntas(categoriasMapeadas);
-            setCategoriaSelecionada(Object.keys(categoriasMapeadas)[0] || null); // Primeira categoria como selecionada por padrão
+            setCategoriaSelecionada(Object.keys(categoriasMapeadas)[0] || null);
+
+            // Obter respostas existentes
+            const respostasResponse = await axiosClient.get(`/answer?alunoId=${idAluno}`);
+            const respostasData: Resposta[] = respostasResponse.data
+
+            // Mapear respostas para preenchimento
+            const respostasMapeadas = respostasData.reduce((acc: { [key: string]: string }, resposta: Resposta) => {
+                acc[resposta.id_pergunta] = resposta.resposta;
+                return acc;
+            }, {});
+
+            setRespostas(respostasMapeadas);
         } catch (error) {
-            console.error('Erro ao obter perguntas ativas:', error);
+            console.error('Erro ao obter perguntas e respostas:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'Ocorreu um erro ao carregar as perguntas e respostas. Tente novamente mais tarde.',
+                confirmButtonText: 'OK',
+            });
         }
     };
 
-    // Chama a função para buscar perguntas ativas ao carregar o componente
     useEffect(() => {
-        obterPerguntasAtivas();
+        obterPerguntasERespostas();
     }, []);
 
-    // Lida com a mudança de resposta de uma pergunta específica
     const handleRespostaChange = (perguntaId: string, valor: string) => {
         setRespostas((prevRespostas) => ({
             ...prevRespostas,
-            [perguntaId]: valor, // Atualiza a resposta para a pergunta específica
+            [perguntaId]: valor,
         }));
     };
 
-    // Envia as respostas ao backend
     const handleSubmit = async () => {
+        if (!idAluno) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro',
+                text: 'ID do aluno não encontrado. Faça login novamente.',
+                confirmButtonText: 'OK',
+            });
+            router.push('/');
+            return;
+        }
+
         try {
-            // Envia as respostas ao backend usando o axiosClient
-            const response = await axiosClient.post('/answer', { respostas });
-    
-            console.log(response);
-            console.log(respostas);
-    
-            if (response.status === 200) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Respostas Salvas!',
-                    text: 'As respostas foram salvas com sucesso.',
-                    confirmButtonText: 'OK',
-                });
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Erro',
-                    text: 'Erro ao salvar as respostas.',
-                    confirmButtonText: 'OK',
-                });
+            const respostasArray = Object.entries(respostas).map(([id_pergunta, resposta]) => ({
+                id_aluno: idAluno,
+                id_pergunta,
+                resposta,
+                data_resposta: new Date().toISOString(),
+            }));
+
+            // Envia cada resposta individualmente
+            for (const resposta of respostasArray) {
+                await axiosClient.post('/answer', resposta);
             }
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Respostas Salvas!',
+                text: 'As respostas foram salvas com sucesso.',
+                confirmButtonText: 'OK',
+            });
+
+            setRespostas({});
         } catch (error) {
             console.error('Erro ao salvar as respostas:', error);
             Swal.fire({
                 icon: 'error',
                 title: 'Erro',
-                text: 'Ocorreu um erro ao enviar as respostas. Verifique o console para mais detalhes.',
+                text: 'Ocorreu um erro ao enviar as respostas. Tente novamente mais tarde.',
                 confirmButtonText: 'OK',
             });
         }
@@ -111,7 +151,6 @@ export default function FormularioComponent() {
                         width={64}
                         height={64}
                     />
-                    <span className="ml-3 text-xl font-bold text-gray-800"></span>
                 </div>
                 <button
                     className="bg-blue-500 text-white font-extrabold p-2 rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:shadow-outline"
@@ -121,7 +160,7 @@ export default function FormularioComponent() {
                 </button>
             </nav>
 
-            <div className=" bg-white flex items-center justify-center p-6">
+            <div className="bg-white flex items-center justify-center p-6">
                 <div className="w-full max-w-lg lg:max-w-3xl bg-white p-8 border border-gray-300 rounded-lg shadow-lg">
                     <h1 className="text-3xl font-bold text-center mb-8 text-gray-900">Formulário de Aluno</h1>
 
@@ -133,7 +172,8 @@ export default function FormularioComponent() {
                         {categorias.map((categoria) => (
                             <button
                                 key={categoria}
-                                className={`px-4 py-2 bg-red-500 text-white rounded-md focus:outline-none hover:bg-red-600 ${categoria === categoriaSelecionada ? 'bg-red-700' : ''}`}
+                                className={`px-4 py-2 bg-red-500 text-white rounded-md focus:outline-none hover:bg-red-600 ${categoria === categoriaSelecionada ? 'bg-red-700' : ''
+                                    }`}
                                 onClick={() => setCategoriaSelecionada(categoria)}
                             >
                                 {categoria}

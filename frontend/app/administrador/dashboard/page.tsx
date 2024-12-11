@@ -1,6 +1,7 @@
 'use client';
 
 import { SetStateAction, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, Tooltip, Legend, BarElement, CategoryScale, LinearScale } from 'chart.js';
@@ -9,17 +10,25 @@ ChartJS.register(Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
 export default function DashboardComponent() {
     const [selectedData, setSelectedData] = useState('data1');
+    const router = useRouter();
 
     const data1 = { labels: ['Sim', 'Não'], datasets: [{ label: 'Alunos', data: [30, 50], backgroundColor: ['#FF6384', '#36A2EB'] }] };
     const data2 = { labels: ['Sim', 'Não'], datasets: [{ label: 'Alunos', data: [45, 25], backgroundColor: ['#4BC0C0', '#FF9F40'] }] };
     const data3 = { labels: ['Sim', 'Não'], datasets: [{ label: 'Alunos', data: [45, 25], backgroundColor: ['#4F5555', '#FF5554'] }] };
-    const data4 = {labels: ['Tecnologia', 'Marketing', 'Recursos Humanos', 'Financeiro'], datasets: [{label: 'Alunos',data: [25, 30, 15, 20],backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0']}]};
+    const data4 = { labels: ['Tecnologia', 'Marketing', 'Recursos Humanos', 'Financeiro'], datasets: [{ label: 'Alunos', data: [25, 30, 15, 20], backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'] }] };
 
     const barData1 = { labels: ['Análise e Desenvolvimento de Sistemas', 'Banco de Dados', 'Desenvolvimento de Software Multiplataforma', 'Gestão da Produção Industrial', 'Gestão Empresarial (EaD)', 'Logística', 'Manufatura Avançada', 'Manutenção de Aeronaves', 'Projetos de Estruturas Aeronáuticas'], datasets: [{ label: 'Alunos', data: [10, 15, 20, 12, 8, 25, 30, 5, 18], backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#FF9F40', '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'] }] };
     const barData2 = { labels: ['Responderam', 'Não responderam'], datasets: [{ label: 'Alunos', data: [15, 25], backgroundColor: ['#4BC0C0', '#FF9F40'] }] };
 
     const handleDropdownChange = (event: { target: { value: SetStateAction<string> } }) => {
         setSelectedData(event.target.value);
+    };
+
+    // Logout do usuário
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('id_aluno');
+        router.push('/');
     };
 
     return (
@@ -34,10 +43,18 @@ export default function DashboardComponent() {
                         width={64}
                         height={64}
                     />
+                    <span className="ml-3 text-xl font-bold text-gray-800">Administração</span>
                 </div>
                 <div className="flex space-x-4">
-                    <a href="/" className="text-black font-semibold">Home</a>
-                    <a href="/administrador/managementforms" className="text-black font-semibold">Formulários</a>
+                    <button onClick={handleLogout} className="text-black font-bold">
+                        Logout
+                    </button>
+                    <button onClick={() => router.push('/administrador/managementforms')} className="text-black font-bold">
+                        Perguntas
+                    </button>
+                    <button onClick={() => router.push('/administrador/excel')} className="text-black font-bold">
+                        Excel
+                    </button>
                 </div>
             </nav>
 

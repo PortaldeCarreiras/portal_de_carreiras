@@ -6,11 +6,11 @@ import { FaTrashAlt } from 'react-icons/fa'; // Ícone de lixeira
 
 export default function FormularioComponent() {
     const [blocks, setBlocks] = useState([
-        { 
-            question: '', 
-            type: 'short-text', 
-            options: ['Opção 1'], 
-            required: false 
+        {
+            question: '',
+            type: 'short-text',
+            options: ['Opção 1'],
+            required: false
         },
     ]);
 
@@ -50,7 +50,7 @@ export default function FormularioComponent() {
 
     const handleDeleteForm = () => {
         if (window.confirm("Você tem certeza que deseja deletar todo o formulário?")) {
-            setBlocks([]); 
+            setBlocks([]);
         }
     };
 

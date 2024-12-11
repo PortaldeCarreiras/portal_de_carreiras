@@ -25,4 +25,9 @@ export default class QuestionsRepository {
     async delete(id: string): Promise<Questions | null> {
         return QuestionsModel.findByIdAndDelete(id).exec();
     }
+
+    async createBatch(questions: Questions[]): Promise<Questions[]> {
+        return QuestionsModel.insertMany(questions);
+    }
+
 }

@@ -8,51 +8,41 @@ import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
-export default function LoginComponent() {  
+export default function LoginComponent() {
     const [cpf, setCpf] = useState('');
     const [senha, setSenha] = useState('');
     const [mensagemErro, setMensagemErro] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const router = useRouter();
 
-const handleLogin = async () => {
-    try {
-        // Verifica qual tipo de login é necessário (Aluno ou Administrador)
-        let role: any
-        const loginRoute = role === 'admin' ? '/auth/login/admin' : '/auth/login/student';
+    const handleLogin = async () => {
+        try {
+            const response = await api.post('/auth/login/student', { cpf, password: senha }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
 
-        const response = await api.post(loginRoute, { cpf, password: senha }, {
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
+            if (response.data.token) {
+                const { id } = response.data.model;
 
-        if (response.data.token) {
-            const { cpf, nome, role } = response.data.model;
+                // Exibe mensagem de sucesso
+                Swal.fire("Logado com sucesso!");
 
-            console.log('Login successful:', response.data);
+                // Armazena o token e ID do aluno no localStorage
+                localStorage.setItem('token', response.data.token);
+                localStorage.setItem('id_aluno', id);
 
-            // Exibe mensagem de sucesso
-            Swal.fire("Logado com sucesso!");
-
-            // Armazena o token no localStorage
-            localStorage.setItem('token', response.data.token);
-
-            // Redireciona baseado no papel do usuário
-            if (role === 'admin') {
-                router.push("/administrador/excel");  // Rota de administrador
+                // Redireciona para a página inicial do aluno
+                router.push("/alunos");
             } else {
-                router.push("/alunos");  // Rota de aluno
+                setMensagemErro("Erro ao obter token de acesso");
             }
-        } else {
-            setMensagemErro("Erro ao obter token de acesso");
+        } catch (error) {
+            console.error('Erro no login:', error);
+            setMensagemErro('Usuário ou senha incorreto');
         }
-    } catch (error) {
-        console.error('Erro no login:', error);
-        setMensagemErro('Usuário ou senha incorreto');
-    }
-};
-
+    };
 
     const toggleShowPassword = () => {
         setShowPassword((prev) => !prev);

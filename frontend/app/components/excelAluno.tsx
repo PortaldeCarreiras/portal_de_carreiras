@@ -9,10 +9,16 @@ import { useRouter } from 'next/navigation';
 
 const UploadComponent = () => {
     const [file, setFile] = useState<File | null>(null);
+    const [uploadType, setUploadType] = useState<'students' | 'questions'>('students'); // Tipo de upload
     const [uploading, setUploading] = useState(false);
     const router = useRouter();
 
-    
+    // Alterar tipo de upload
+    const handleTypeChange = (type: 'students' | 'questions') => {
+        setFile(null); // Limpar arquivo selecionado
+        setUploadType(type);
+    };
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             setFile(e.target.files[0]);
@@ -26,9 +32,8 @@ const UploadComponent = () => {
         const lowerStr = str.toLowerCase();
         return lowerStr === 'sim';
     };
-    ;
 
-    // Json do estudante
+    // Mapeamento para estudantes
     const mapRowToStudent = (row: any) => {
         if (!row.nome || !row.email) {
             console.error(`Dados inválidos na linha: ${JSON.stringify(row)}`);
@@ -101,18 +106,25 @@ const UploadComponent = () => {
             },
         };
     };
-    
 
-    // xml
+    // Mapeamento para perguntas
+    const mapRowToQuestion = (row: any) => {
+        if (!row.pergunta) { return null };
+        return {
+            pergunta: row.pergunta || '',
+            status_pergunta: row.status_pergunta?.toString().toLowerCase() === 'true',
+            categoria_pergunta: row.categoria_pergunta || '',
+        }
+    };
+
     const handleUpload = async () => {
-
         if (!file) {
-            Swal.fire('Por favor, selecione um arquivo primeiro.');
+            Swal.fire('Erro', 'Por favor, selecione um arquivo primeiro.', 'error');
             return;
         }
-    
+
         setUploading(true);
-    
+
         const reader = new FileReader();
         reader.onload = async (e) => {
             const data = e.target?.result;
@@ -120,26 +132,32 @@ const UploadComponent = () => {
             const sheetName = workbook.SheetNames[0];
             const sheet = workbook.Sheets[sheetName];
             const rows = XLSX.utils.sheet_to_json(sheet);
-    
-            const students = rows.map(mapRowToStudent).filter(student => student !== null);
-    
+
             try {
-                // Envia todos os alunos em uma única requisição
-                const response = await axiosClient.post('/students/batch', students);
-                console.log('Usuários criados:', response.data);
-                Swal.fire('Todos os usuários foram criados com sucesso!');
+                if (uploadType === 'students') {
+                    const students = rows.map(mapRowToStudent).filter((student): student is NonNullable<typeof student> => student !== null);
+                    await axiosClient.post('/students/batch', students);
+                    Swal.fire('Sucesso', 'Os estudantes foram cadastrados com sucesso!', 'success');
+                } else if (uploadType === 'questions') {
+                    const questions = rows.map(mapRowToQuestion).filter((question): question is NonNullable<typeof question> => question !== null);
+                    await axiosClient.post('/questions/batch', questions);
+                    Swal.fire('Sucesso', 'As perguntas foram cadastradas com sucesso!', 'success');
+                }
             } catch (error) {
-                console.error('Erro ao criar usuários:', error);
-                Swal.fire('Erro ao criar usuários. Verifique o console para mais detalhes.');
+                console.error('Erro ao processar o upload:', error);
+                Swal.fire('Erro', 'Houve um problema ao processar o upload.', 'error');
             } finally {
                 setUploading(false);
             }
         };
+
         reader.readAsBinaryString(file);
     };
-    
 
-    const handleLoginRedirect = () => {
+    // Logout do usuário
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('id_aluno');
         router.push('/');
     };
 
@@ -157,27 +175,54 @@ const UploadComponent = () => {
                     />
                     <span className="ml-3 text-xl font-bold text-gray-800">Administração</span>
                 </div>
-                <button
-                    className="bg-blue-500 text-white font-extrabold p-2 rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:shadow-outline"
-                    onClick={handleLoginRedirect}
-                >
-                    Login
-                </button>
+                <div className="flex space-x-4">
+                    <button onClick={handleLogout} className="text-black font-bold">
+                        Logout
+                    </button>
+                    <button onClick={() => router.push('/administrador/dashboard')} className="text-black font-bold">
+                        Dashboard
+                    </button>
+                    <button onClick={() => router.push('/administrador/managementforms')} className="text-black font-bold">
+                        Perguntas
+                    </button>
+                </div>
             </nav>
 
             {/* Conteúdo Principal */}
-            <div className="flex-grow flex items-center justify-center p-6">
+            <div className="flex-grow flex flex-col items-center justify-center p-6">
                 <div className="w-full max-w-lg lg:max-w-3xl bg-white p-8 border border-gray-300 rounded-lg shadow-lg">
-                    <h1 className="text-3xl font-bold text-center mb-8 text-gray-900">Upload de Usuários</h1>
+                    <h1 className="text-3xl font-bold text-center mb-8 text-gray-900">
+                        Upload de Arquivos
+                    </h1>
+
+                    {/* Botões de Tipo de Upload */}
+                    <div className="mb-6 flex justify-around">
+                        <button
+                            className={`py-2 px-4 rounded-lg font-extrabold shadow-md ${uploadType === 'students' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'}`}
+                            onClick={() => handleTypeChange('students')}
+                        >
+                            Upload de Estudantes
+                        </button>
+                        <button
+                            className={`py-2 px-4 rounded-lg font-extrabold shadow-md ${uploadType === 'questions' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'}`}
+                            onClick={() => handleTypeChange('questions')}
+                        >
+                            Upload de Perguntas
+                        </button>
+                    </div>
 
                     {/* Botão para Download do Arquivo Excel */}
                     <div className="mb-6">
                         <a
-                            href="/modelo_padrao_upload_de_usuarios.xlsx"
+                            href={
+                                uploadType === 'students'
+                                    ? '/modelo_padrao_upload_de_usuarios.xlsx'
+                                    : '/modelo_padrao_upload_de_perguntas.xlsx'
+                            }
                             download
                             className="w-full py-3 rounded-lg bg-green-500 text-white font-extrabold shadow-md hover:bg-green-600 transition duration-200 ease-in-out flex items-center justify-center"
                         >
-                            Baixar Exemplo de Arquivo Excel
+                            Baixar Modelo de Arquivo Excel
                         </a>
                     </div>
 
@@ -194,16 +239,15 @@ const UploadComponent = () => {
                     {/* Botão de Upload */}
                     <button
                         onClick={handleUpload}
-                        className={`w-full py-3 rounded-lg text-white font-extrabold ${false ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'} shadow-md transition duration-200 ease-in-out`}
-                        disabled={false} // Altere a lógica de upload aqui
+                        className={`w-full py-3 rounded-lg text-white font-extrabold ${uploading ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'} shadow-md transition duration-200 ease-in-out`}
+                        disabled={uploading}
                     >
-                        Upload
+                        {uploading ? 'Carregando...' : 'Fazer Upload'}
                     </button>
                 </div>
             </div>
         </div>
     );
-
 };
 
 export default UploadComponent;

@@ -2,28 +2,24 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { FaTrashAlt } from 'react-icons/fa';  // Ícone de lixeira
+import { FaTrashAlt } from 'react-icons/fa';
+import axiosClient from '../../services/axiosClient'; // Importe o cliente Axios configurado
 
-export default function FormularioComponent() {
+export default function PerguntasComponent() {
     const [blocks, setBlocks] = useState([
-        { 
-            question: '', 
-            type: 'short-text', 
-            options: ['Opção 1'], 
-            required: false 
+        {
+            question: '',
+            category: '',
+            type: 'text',
+            options: ['Opção 1'],
         },
     ]);
 
-    const [selectedTab, setSelectedTab] = useState('perguntas');
-    const [responses, setResponses] = useState([]); // Armazena as respostas dos usuários
-
-    const handleAddOption = (blockIndex) => {
+    const handleAddOption = (blockIndex: number) => {
         setBlocks((prev) => {
             const updatedBlocks = [...prev];
             const block = updatedBlocks[blockIndex];
-            // Adiciona uma nova opção única com base no número de opções já existentes
             const newOption = `Opção ${block.options.length + 1}`;
-            // Adiciona apenas uma opção ao array de opções
             updatedBlocks[blockIndex] = {
                 ...block,
                 options: [...block.options, newOption],
@@ -32,7 +28,16 @@ export default function FormularioComponent() {
         });
     };
 
-    const handleUpdateBlock = (blockIndex, field, value) => {
+    const handleDeleteOption = (blockIndex: number, optionIndex: number) => {
+        setBlocks((prev) => {
+            const updatedBlocks = [...prev];
+            const block = updatedBlocks[blockIndex];
+            block.options.splice(optionIndex, 1);
+            return updatedBlocks;
+        });
+    };
+
+    const handleUpdateBlock = (blockIndex: number, field: string, value: string) => {
         setBlocks((prev) => {
             const updatedBlocks = [...prev];
             updatedBlocks[blockIndex][field] = value;
@@ -43,36 +48,48 @@ export default function FormularioComponent() {
     const handleAddNewBlock = () => {
         setBlocks((prev) => [
             ...prev,
-            { question: '', type: 'short-text', options: ['Opção 1'], required: false },
+            { question: '', category: '', type: 'text', options: ['Opção 1'] },
         ]);
     };
 
-    const handleSaveForm = () => {
-        alert("Formulário salvo!");
+    const handleDeleteBlock = (blockIndex: number) => {
+        setBlocks((prev) => prev.filter((_, index) => index !== blockIndex));
     };
 
-    const handleDeleteForm = () => {
-        if (window.confirm("Você tem certeza que deseja deletar todo o formulário?")) {
-            setBlocks([]); 
+    const handleSaveQuestions = async () => {
+        try {
+            for (const block of blocks) {
+                const payload = {
+                    pergunta: block.question,
+                    categoria_pergunta: block.category,
+                    status_pergunta: true, // Todas as perguntas são ativas por padrão
+                };
+
+                if (block.type === 'multiple-choice' || block.type === 'checkbox') {
+                    payload['options'] = block.options; // Adiciona opções para múltipla escolha/checkbox
+                }
+
+                await axiosClient.post('/question', payload);
+            }
+
+            alert('Perguntas salvas com sucesso!');
+            setBlocks([
+                {
+                    question: '',
+                    category: '',
+                    type: 'text',
+                    options: ['Opção 1'],
+                },
+            ]);
+        } catch (error) {
+            console.error('Erro ao salvar perguntas:', error);
+            alert('Ocorreu um erro ao salvar as perguntas.');
         }
-    };
-
-    const handleDeleteBlock = (blockIndex) => {
-        setBlocks((prev) => {
-            const updatedBlocks = prev.filter((_, index) => index !== blockIndex);
-            return updatedBlocks;
-        });
-    };
-
-    const handleSubmitResponse = (blockIndex, response) => {
-        // Aqui você pode customizar o que acontece quando o usuário envia uma resposta
-        const newResponse = { question: blocks[blockIndex].question, response };
-        setResponses((prevResponses) => [...prevResponses, newResponse]);
     };
 
     return (
         <main className="h-screen bg-gray-100 overflow-auto">
-            {/* Navbar original */}
+            {/* Navbar */}
             <nav className="bg-slate-100 shadow-md p-4 flex justify-between items-center">
                 <div className="flex items-center">
                     <Image
@@ -83,206 +100,140 @@ export default function FormularioComponent() {
                         height={64}
                     />
                 </div>
+                <div>
+                    <button
+                        onClick={() => window.location.href = '/administrador/managementforms'}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                    >
+                        Gerenciar Perguntas
+                    </button>
+                </div>
             </nav>
 
-            {/* Abas para selecionar entre Perguntas e Respostas */}
-            <div className="max-w-3xl mx-auto mt-4 flex space-x-4">
-                <button
-                    onClick={() => setSelectedTab('perguntas')}
-                    className={`w-full py-1 text-black ${selectedTab === 'perguntas' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-                >
-                    Perguntas
-                </button>
-                <button
-                    onClick={() => setSelectedTab('respostas')}
-                    className={`w-full py-1 text-black ${selectedTab === 'respostas' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-                >
-                    Respostas
-                </button>
-            </div>
+            {/* Blocos de Perguntas */}
+            <div className="max-w-3xl mx-auto mt-8">
+                {blocks.map((block, blockIndex) => (
+                    <div key={blockIndex} className="mt-4 p-6 bg-white shadow rounded-md relative">
+                        {/* Pergunta e Tipo de Pergunta */}
+                        <div className="flex justify-between mb-4">
+                            <input
+                                type="text"
+                                value={block.question}
+                                onChange={(e) =>
+                                    handleUpdateBlock(blockIndex, 'question', e.target.value)
+                                }
+                                placeholder="Escreva a pergunta"
+                                className="w-[48%] border border-gray-300 rounded-md p-2 text-black"
+                            />
+                            <select
+                                value={block.type}
+                                onChange={(e) =>
+                                    handleUpdateBlock(blockIndex, 'type', e.target.value)
+                                }
+                                className="w-[48%] border border-gray-300 rounded-md p-2 text-black"
+                            >
+                                <option value="text">Texto</option>
+                                <option value="date">Data</option>
+                                <option value="multiple-choice">Múltipla escolha</option>
+                                <option value="checkbox">Caixas de seleção</option>
+                            </select>
+                        </div>
 
-            {/* Exibe as Perguntas */}
-            {selectedTab === 'perguntas' && (
-                <>
-                    {/* Bloco do Título e Descrição */}
-                    <div className="max-w-3xl mx-auto mt-8 p-6 bg-white shadow rounded-md">
+                        {/* Categoria da pergunta */}
                         <div className="mb-4">
                             <input
                                 type="text"
-                                placeholder="Título do formulário"
-                                className="w-full border border-gray-300 rounded-md p-2 text-lg text-black"
-                            />
-                        </div>
-                        <div>
-                            <textarea
-                                placeholder="Descrição do formulário"
+                                value={block.category}
+                                onChange={(e) =>
+                                    handleUpdateBlock(blockIndex, 'category', e.target.value)
+                                }
+                                placeholder="Categoria da pergunta"
                                 className="w-full border border-gray-300 rounded-md p-2 text-black"
-                                rows="3"
                             />
                         </div>
-                    </div>
 
-                    {/* Blocos de Perguntas */}
-                    {blocks.map((block, blockIndex) => (
-                        <div key={blockIndex} className="max-w-3xl mx-auto mt-4 p-6 bg-white shadow rounded-md relative">
-                            {/* Pergunta e Tipo de Pergunta lado a lado */}
-                            <div className="flex justify-between mb-4">
-                                <input
-                                    type="text"
-                                    value={block.question}
-                                    onChange={(e) =>
-                                        handleUpdateBlock(blockIndex, 'question', e.target.value)
-                                    }
-                                    placeholder="Pergunta sem título"
-                                    className="w-[48%] border border-gray-300 rounded-md p-2 text-black"
-                                />
-                                <select
-                                    value={block.type}
-                                    onChange={(e) =>
-                                        handleUpdateBlock(blockIndex, 'type', e.target.value)
-                                    }
-                                    className="w-[48%] border border-gray-300 rounded-md p-2 text-black"
-                                >
-                                    <option value="short-text">Resposta curta</option>
-                                    <option value="long-text">Parágrafo</option>
-                                    <option value="multiple-choice">Múltipla escolha</option>
-                                    <option value="checkbox">Caixas de seleção</option>
-                                    <option value="date">Data</option>
-                                </select>
-                            </div>
-
-                            {/* Campo de Resposta */}
-                            {block.type === 'short-text' && (
-                                <input
-                                    type="text"
-                                    placeholder="Texto de resposta curta"
-                                    className="w-full border border-gray-300 rounded-md p-2 text-black"
-                                    disabled
-                                />
-                            )}
-
-                            {block.type === 'long-text' && (
-                                <textarea
-                                    placeholder="Texto de resposta longa"
-                                    className="w-full border border-gray-300 rounded-md p-2 text-black"
-                                    rows="3"
-                                    disabled
-                                />
-                            )}
-
-                            {block.type === 'date' && (
-                                <input
-                                    type="date"
-                                    className="w-full border border-gray-300 rounded-md p-2 text-black"
-                                />
-                            )}
-
-                            {(block.type === 'multiple-choice' || block.type === 'checkbox') && (
-                                <div className="mb-4">
-                                    {block.options.map((option, optionIndex) => (
-                                        <div key={optionIndex} className="flex items-center mb-2">
-                                            {block.type === 'multiple-choice' && (
-                                                <input type="radio" name={`options-${blockIndex}`} className="mr-2" disabled />
-                                            )}
-                                            {block.type === 'checkbox' && (
-                                                <input type="checkbox" className="mr-2" disabled />
-                                            )}
-                                            <input
-                                                type="text"
-                                                value={option}
-                                                onChange={(e) => {
-                                                    const updatedOptions = [...block.options];
-                                                    updatedOptions[optionIndex] = e.target.value;
-                                                    handleUpdateBlock(blockIndex, 'options', updatedOptions);
-                                                }}
-                                                className="flex-1 border border-gray-300 rounded-md p-2 text-black"
-                                            />
-                                        </div>
-                                    ))}
-                                    <button
-                                        onClick={() => handleAddOption(blockIndex)}
-                                        className="text-blue-500 text-sm mt-2"
-                                    >
-                                        + Adicionar opção
-                                    </button>
-                                </div>
-                            )}
-
-                            {/* Checkbox para obrigatoriedade */}
-                            <div className="flex items-center">
-                                <label className="text-sm mr-2 text-black">Obrigatória:</label>
-                                <input
-                                    type="checkbox"
-                                    checked={block.required}
-                                    onChange={() =>
-                                        handleUpdateBlock(blockIndex, 'required', !block.required)
-                                    }
-                                    className="w-4 h-4"
-                                />
-                            </div>
-
-                            {/* Lixeira no canto inferior direito */}
-                            <button
-                                onClick={() => handleDeleteBlock(blockIndex)}
-                                className="absolute bottom-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
-                            >
-                                <FaTrashAlt />
-                            </button>
-                        </div>
-                    ))}
-
-                    {/* Botões de adicionar pergunta, salvar e deletar */}
-                    <div className="max-w-3xl mx-auto mt-4 space-y-2">
-                        <button
-                            onClick={handleAddNewBlock}
-                            className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-md shadow hover:bg-blue-600"
-                        >
-                            + Adicionar outra pergunta
-                        </button>
-
-                        <div className="flex space-x-4 mt-4">
-                            <button
-                                onClick={handleSaveForm}
-                                className="w-full md:w-1/2 bg-green-500 text-white font-bold py-2 px-4 rounded-md shadow hover:bg-green-600"
-                            >
-                                Salvar
-                            </button>
-
-                            <button
-                                onClick={handleDeleteForm}
-                                className="w-full md:w-1/2 bg-red-500 text-white font-bold py-2 px-4 rounded-md shadow hover:bg-red-600"
-                            >
-                                Deletar formulário
-                            </button>
-                        </div>
-                    </div>
-                </>
-            )}
-
-            {/* Exibe as Respostas */}
-            {selectedTab === 'respostas' && (
-                <>
-                    <div className="max-w-3xl mx-auto mt-8 p-6 bg-white shadow rounded-md">
-                        {/* Bloco 1: Contador de respostas */}
-                        <h2 className="text-xl font-bold mb-4">Respostas</h2>
-                        <p className="text-gray-600">Número de respostas: {responses.length}</p>
-                    </div>
-
-                    {/* Bloco 2: Exibe as respostas */}
-                    <div className="max-w-3xl mx-auto mt-4 p-6 bg-white shadow rounded-md">
-                        {responses.length === 0 ? (
-                            <p className="text-gray-500">Ainda não há respostas.</p>
-                        ) : (
-                            responses.map((response, index) => (
-                                <div key={index} className="mb-4">
-                                    <p className="font-semibold">{response.question}</p>
-                                    <p>{response.response}</p>
-                                </div>
-                            ))
+                        {/* Campo de Resposta */}
+                        {block.type === 'text' && (
+                            <input
+                                type="text"
+                                placeholder="Resposta curta"
+                                className="w-full border border-gray-300 rounded-md p-2 text-black"
+                                disabled
+                            />
                         )}
+
+                        {block.type === 'date' && (
+                            <input
+                                type="date"
+                                className="w-full border border-gray-300 rounded-md p-2 text-black"
+                                disabled
+                            />
+                        )}
+
+                        {(block.type === 'multiple-choice' || block.type === 'checkbox') && (
+                            <div className="mb-4">
+                                {block.options.map((option, optionIndex) => (
+                                    <div key={optionIndex} className="flex items-center mb-2">
+                                        {block.type === 'multiple-choice' && (
+                                            <input type="radio" className="mr-2" disabled />
+                                        )}
+                                        {block.type === 'checkbox' && (
+                                            <input type="checkbox" className="mr-2" disabled />
+                                        )}
+                                        <input
+                                            type="text"
+                                            value={option}
+                                            onChange={(e) => {
+                                                const updatedOptions = [...block.options];
+                                                updatedOptions[optionIndex] = e.target.value;
+                                                handleUpdateBlock(blockIndex, 'options', updatedOptions);
+                                            }}
+                                            className="flex-1 border border-gray-300 rounded-md p-2 text-black"
+                                        />
+                                        <button
+                                            onClick={() => handleDeleteOption(blockIndex, optionIndex)}
+                                            className="ml-2 text-red-500 hover:text-red-700"
+                                        >
+                                            <FaTrashAlt />
+                                        </button>
+                                    </div>
+                                ))}
+                                <button
+                                    onClick={() => handleAddOption(blockIndex)}
+                                    className="text-blue-500 text-sm mt-2"
+                                >
+                                    + Adicionar opção
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Botão para excluir bloco */}
+                        <button
+                            onClick={() => handleDeleteBlock(blockIndex)}
+                            className="absolute bottom-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
+                        >
+                            <FaTrashAlt />
+                        </button>
                     </div>
-                </>
-            )}
+                ))}
+
+                {/* Botões de adicionar pergunta e salvar */}
+                <div className="mt-4 space-y-4">
+                    <button
+                        onClick={handleAddNewBlock}
+                        className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-md shadow hover:bg-blue-600"
+                    >
+                        + Adicionar nova pergunta
+                    </button>
+
+                    <button
+                        onClick={handleSaveQuestions}
+                        className="w-full bg-green-500 text-white font-bold py-2 px-4 rounded-md shadow hover:bg-green-600"
+                    >
+                        Salvar Perguntas
+                    </button>
+                </div>
+            </div>
         </main>
     );
 }

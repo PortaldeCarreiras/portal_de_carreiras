@@ -12,7 +12,7 @@ const AnswerSchema: Schema = new Schema({
     id_aluno: { type: String, required: true },
     id_pergunta: { type: String, required: true },
     resposta: { type: String, required: true },
-    version: { type: String, required: true },
+    version: { type: String, required: false },
     data_resposta: { type: Date, required: true }
 });
 

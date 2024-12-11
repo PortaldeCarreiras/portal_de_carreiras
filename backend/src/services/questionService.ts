@@ -24,20 +24,23 @@ export default class QuestionsService {
         return this.questionsRepository.findActiveQuestions();
     }
 
-    async updateQuestion(
-        id: string,
-        pergunta: Partial<Questions>
-    ): Promise<Questions | null> {
-        const existingQuestion = await this.questionsRepository.findById(id);
-        if (!existingQuestion) {
-            return null;
-        }
+    async updateQuestion(id: string, pergunta: Partial<Questions>): Promise<Questions | null> {
 
-        const updatedQuestion = { ...existingQuestion, ...pergunta };
-        return this.questionsRepository.update(id, updatedQuestion);
+        // const existingQuestion = await this.questionsRepository.findById(id);
+        // if (!existingQuestion) {
+        //     return null;
+        // }
+
+        // const updatedQuestion = { ...existingQuestion, ...pergunta };
+        return this.questionsRepository.update(id, pergunta);
     }
 
     async deleteQuestion(id: string): Promise<Questions | null> {
         return this.questionsRepository.delete(id);
     }
+
+    async createBatchQuestions(questions: Questions[]): Promise<Questions[]> {
+        return this.questionsRepository.createBatch(questions);
+    }
+
 }

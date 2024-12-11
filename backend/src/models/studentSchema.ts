@@ -78,14 +78,14 @@ interface Student extends Document {
 
 const IdentitySchema: Schema = new Schema({
   tipo: { type: String, required: false },
-  numero: { type: Number, required: true },
+  numero: { type: Number, required: false },
 });
 
 const EnderecoSchema: Schema = new Schema({
   uf: { type: String, required: false },
   rua: { type: String, required: false },
   numero: { type: Number, required: false },
-  complemento: { type: String },
+  complemento: { type: String , required: false},
   bairro: { type: String, required: false },
   cep: { type: Number, required: false },
 });
@@ -135,7 +135,7 @@ const StudentSchema: Schema = new Schema({
   nome: { type: String, required: true },
   senha: { type: String, required: false },
   role: { type: String, enum: ['admin', 'aluno'], default: 'aluno' },
-  identidade: { type: IdentitySchema, required: true },
+  identidade: { type: IdentitySchema, required: false },
   sexo: { type: String, required: false },
   nascimento: { type: String, required: false },
   estado_civil: { type: String, required: false },
@@ -149,7 +149,7 @@ const StudentSchema: Schema = new Schema({
   necessidade: { type: String, required: false },
   notas: { type: NotasSchema, required: false },
   classificacao: { type: ClassificacaoSchema, required: false },
-  documentos: { type: DocumentosSchema, required: false },
+  documentos: { type: DocumentosSchema, required: true },
 });
 
 const StudentModel = mongoose.model<Student>("Student", StudentSchema);

@@ -87,4 +87,15 @@ export default class QuestionsController {
       res.status(500).json({ error: err.message });
     }
   };
+
+  public createBatchQuestions = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const questions: Questions[] = req.body;
+      const createdQuestions = await this.questionService.createBatchQuestions(questions);
+      res.status(201).json(createdQuestions);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  };
+
 }
