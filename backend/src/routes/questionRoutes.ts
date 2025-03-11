@@ -1,5 +1,5 @@
-import QuestionsController from "@src/controllers/questionController";
-import isAuthenticated from "@src/utils/middlewares/jwtAuthentication";
+import QuestionsController from "../controllers/questionController";
+import isAuthenticated from "../utils/middlewares/jwtAuthentication";
 import { Router } from "express";
 
 const controller = new QuestionsController();

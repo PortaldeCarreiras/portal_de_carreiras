@@ -1,4 +1,4 @@
-import QuestionsModel, { Questions } from "@src/models/questionSchema";
+import QuestionsModel, { Questions } from "../models/questionSchema";
 
 export default class QuestionsRepository {
     async create(question: Questions): Promise<Questions> {

@@ -1,6 +1,6 @@
 
-import { Answer } from "@src/models/answerSchema";
-import AnswerRepository from "@src/repository/answerRepository";
+import { Answer } from "../models/answerSchema";
+import AnswerRepository from "../repository/answerRepository";
 
 export default class AnswerService {
     private answerRepository: AnswerRepository;

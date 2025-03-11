@@ -1,6 +1,6 @@
 // respostaController.ts
 import { Request, Response } from "express";
-import AnswerService from "@src/services/answerService";
+import AnswerService from "../services/answerService";
 
 export default class RespostaController {
     private answerService: AnswerService;

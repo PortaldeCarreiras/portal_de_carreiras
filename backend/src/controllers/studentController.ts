@@ -1,5 +1,5 @@
-import { Student } from "@src/models/studentSchema";
-import StudentService from "@src/services/studentService";
+import { Student } from "../models/studentSchema";
+import StudentService from "../services/studentService";
 import { Request, Response } from "express";
 
 export default class StudentController {

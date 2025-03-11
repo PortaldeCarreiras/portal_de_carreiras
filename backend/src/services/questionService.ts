@@ -1,5 +1,5 @@
-import { Questions } from "@src/models/questionSchema";
-import QuestionsRepository from "@src/repository/questionRepository";
+import { Questions } from "../models/questionSchema";
+import QuestionsRepository from "../repository/questionRepository";
 
 export default class QuestionsService {
     private questionsRepository: QuestionsRepository;

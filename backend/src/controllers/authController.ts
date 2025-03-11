@@ -1,8 +1,8 @@
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
-import StudentService from "@src/services/studentService";
-import AdminService from "@src/services/adminService"; // Novo serviço para administradores
-import authenticate from "@src/utils/helpers/authenticate";
+import StudentService from "../services/studentService";
+import AdminService from "../services/adminService"; // Novo serviço para administradores
+import authenticate from "../utils/helpers/authenticate";
 
 export default class AuthController {
   private studentService: StudentService;
