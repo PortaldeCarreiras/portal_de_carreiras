@@ -1,5 +1,5 @@
-import { Student } from "@src/models/studentSchema";
-import StudentRepository from "@src/repository/studentRepository";
+import { Student } from "../models/studentSchema";
+import StudentRepository from "../repository/studentRepository";
 
 export default class StudentService {
   private studentRepository: StudentRepository;

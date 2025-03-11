@@ -1,5 +1,5 @@
-import StudentController from "@src/controllers/studentController";
-import isAuthenticated from "@src/utils/middlewares/jwtAuthentication";
+import StudentController from "../controllers/studentController";
+import isAuthenticated from "../utils/middlewares/jwtAuthentication";
 import { Router } from "express";
 
 const controller = new StudentController();

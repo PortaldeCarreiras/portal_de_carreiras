@@ -1,4 +1,4 @@
-import AnswerModel, { Answer } from "@src/models/answerSchema";
+import AnswerModel, { Answer } from "../models/answerSchema";
 
 export default class AnswerRepository {
     async create(answer: Answer): Promise<Answer> {

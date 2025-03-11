@@ -1,5 +1,5 @@
-import { Admin } from "@src/models/adminSchema";
-import AdminRepository from "@src/repository/adminRepository";
+import { Admin } from "../models/adminSchema";
+import AdminRepository from "../repository/adminRepository";
 
 export default class AdminService {
   private adminRepository: AdminRepository;

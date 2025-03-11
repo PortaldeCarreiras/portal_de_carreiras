@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { Questions } from "@src/models/questionSchema";
-import QuestionsService from "@src/services/questionService";
+import { Questions } from "../models/questionSchema";
+import QuestionsService from "../services/questionService";
 
 export default class QuestionsController {
   private questionService: QuestionsService;

@@ -1,5 +1,5 @@
-import AdminController from "@src/controllers/adminController";
-import isAuthenticated from "@src/utils/middlewares/jwtAuthentication";
+import AdminController from "../controllers/adminController";
+import isAuthenticated from "../utils/middlewares/jwtAuthentication";
 import { Router } from "express";
 
 const controller = new AdminController();

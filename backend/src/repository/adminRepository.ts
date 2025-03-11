@@ -1,5 +1,5 @@
-import AdminModel, { Admin } from "@src/models/adminSchema";
-import hashPassword from "@src/utils/helpers/hashPassword";
+import AdminModel, { Admin } from "../models/adminSchema";
+import hashPassword from "../utils/helpers/hashPassword";
 
 export default class AdminRepository {
   async create(admin: Admin): Promise<Admin> {

@@ -1,5 +1,5 @@
-import { Admin } from "@src/models/adminSchema";
-import AdminService from "@src/services/adminService";
+import { Admin } from "../models/adminSchema";
+import AdminService from "../services/adminService";
 import { Request, Response } from "express";
 
 export default class AdminController {

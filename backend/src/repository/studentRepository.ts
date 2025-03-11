@@ -1,5 +1,5 @@
-import StudentModel, { Student } from "@src/models/studentSchema";
-import hashPassword from "@src/utils/helpers/hashPassword";
+import StudentModel, { Student } from "../models/studentSchema";
+import hashPassword from "../utils/helpers/hashPassword";
 
 export default class StudentRepository {
   async create(student: Student): Promise<Student> {

@@ -1,5 +1,5 @@
-import AnswerController from "@src/controllers/answerController";
-import isAuthenticated from "@src/utils/middlewares/jwtAuthentication";
+import AnswerController from "../controllers/answerController";
+import isAuthenticated from "../utils/middlewares/jwtAuthentication";
 import { Router } from "express";
 
 const controller = new AnswerController();
