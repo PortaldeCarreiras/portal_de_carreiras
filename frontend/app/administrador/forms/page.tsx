@@ -4,9 +4,17 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { FaTrashAlt } from 'react-icons/fa';
 import axiosClient from '../../services/axiosClient'; // Importe o cliente Axios configurado
+import { optimizeImage } from 'next/dist/server/image-optimizer';
 
 export default function PerguntasComponent() {
-    const [blocks, setBlocks] = useState([
+    type BlockType = {
+        question: string;
+        category: string;
+        type: string;
+        options: string[]
+    };
+
+    const [blocks, setBlocks] = useState<BlockType[]>([
         {
             question: '',
             category: '',
@@ -37,10 +45,14 @@ export default function PerguntasComponent() {
         });
     };
 
-    const handleUpdateBlock = (blockIndex: number, field: string, value: string) => {
+    const handleUpdateBlock = (blockIndex: number, field: keyof BlockType, value: string | string[]) => {
         setBlocks((prev) => {
             const updatedBlocks = [...prev];
-            updatedBlocks[blockIndex][field] = value;
+            if (field === 'options') {
+                updatedBlocks[blockIndex][field] = Array.isArray(value) ? value : [value];
+            } else {
+                updatedBlocks[blockIndex][field] = value as string;
+            }
             return updatedBlocks;
         });
     };
@@ -59,7 +71,7 @@ export default function PerguntasComponent() {
     const handleSaveQuestions = async () => {
         try {
             for (const block of blocks) {
-                const payload = {
+                const payload: { pergunta: string; categoria_pergunta: string; status_pergunta: boolean; options?: string[] } = {
                     pergunta: block.question,
                     categoria_pergunta: block.category,
                     status_pergunta: true, // Todas as perguntas são ativas por padrão

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axiosClient from '../services/axiosClient';
 import Swal from 'sweetalert2';
 import { useRouter } from 'next/navigation';
@@ -22,11 +22,19 @@ export default function FormularioComponent() {
     const [categorias, setCategorias] = useState<string[]>([]);
     const [respostas, setRespostas] = useState<{ [key: string]: string }>({});
     const [categoriaSelecionada, setCategoriaSelecionada] = useState<string | null>(null);
+    const [idAluno, setIdAluno] = useState<string | null>(null);
     const router = useRouter();
 
-    const idAluno = localStorage.getItem('id_aluno'); // Certifique-se de que o ID do aluno está armazenado
 
-    const obterPerguntasERespostas = async () => {
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            setIdAluno(localStorage.getItem("token"));
+        }
+    }, []);
+
+    // const idAluno = localStorage.getItem('id_aluno'); // Certifique-se de que o ID do aluno está armazenado
+
+    const obterPerguntasERespostas = useCallback(async () => {
 
         if (!idAluno) {
             Swal.fire({
@@ -78,11 +86,11 @@ export default function FormularioComponent() {
                 confirmButtonText: 'OK',
             });
         }
-    };
+    }, [idAluno, router]);
 
     useEffect(() => {
         obterPerguntasERespostas();
-    }, []);
+    }, [obterPerguntasERespostas]);
 
     const handleRespostaChange = (perguntaId: string, valor: string) => {
         setRespostas((prevRespostas) => ({
