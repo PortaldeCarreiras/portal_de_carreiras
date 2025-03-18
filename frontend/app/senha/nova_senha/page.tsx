@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 import { useRouter } from 'next/navigation';
 
@@ -12,6 +13,8 @@ export default function NovaSenhaPage() {
     const [showPasswordNova, setShowPasswordNova] = useState(false);
     const [showPasswordRepita, setShowPasswordRepita] = useState(false);
     const router = useRouter();
+    const faEyeIcon = faEye as IconProp;
+    const faEyeSlashIcon = faEyeSlash as IconProp;
 
     const toggleShowPasswordNova = () => {
         setShowPasswordNova((prevShowPassword) => !prevShowPassword);
@@ -37,7 +40,7 @@ export default function NovaSenhaPage() {
 
             {/* Seção da Nova senha */}
             <div className="flex-grow bg-gray-400 flex flex-col items-center justify-center p-6 relative">
-                
+
                 {/* Seção de Logo da Faculdade */}
                 <div className="absolute top-0 right-0 p-4 bg-white rounded-full hidden lg:block shadow-lg">
                     <Image
@@ -70,7 +73,7 @@ export default function NovaSenhaPage() {
                                 className="absolute inset-y-0 right-2 flex items-center"
                                 style={{ top: '-30%' }}
                             >
-                                <FontAwesomeIcon icon={showPasswordNova ? faEye : faEyeSlash} />
+                                <FontAwesomeIcon icon={showPasswordNova ? faEyeIcon : faEyeSlashIcon} />
                             </button>
                         </div>
                     </label>
@@ -90,7 +93,7 @@ export default function NovaSenhaPage() {
                                 className="absolute inset-y-0 right-2 flex items-center"
                                 style={{ top: '-30%' }}
                             >
-                                <FontAwesomeIcon icon={showPasswordRepita ? faEye : faEyeSlash} />
+                                <FontAwesomeIcon icon={showPasswordRepita ? faEyeIcon : faEyeSlashIcon} />
                             </button>
                         </div>
                     </label>

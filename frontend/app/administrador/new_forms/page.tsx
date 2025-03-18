@@ -5,6 +5,14 @@ import Image from 'next/image';
 import { FaTrashAlt } from 'react-icons/fa'; // Ícone de lixeira
 
 export default function FormularioComponent() {
+
+    type Block = {
+        question: string;
+        type: string;
+        options: string[];
+        required: boolean;
+    }
+
     const [blocks, setBlocks] = useState([
         {
             question: '',
@@ -14,7 +22,7 @@ export default function FormularioComponent() {
         },
     ]);
 
-    const handleAddOption = (blockIndex) => {
+    const handleAddOption = (blockIndex: number) => {
         setBlocks((prev) => {
             const updatedBlocks = [...prev];
             const block = updatedBlocks[blockIndex];
@@ -29,10 +37,29 @@ export default function FormularioComponent() {
         });
     };
 
-    const handleUpdateBlock = (blockIndex, field, value) => {
+    // const handleUpdateBlock = (blockIndex: number, field: keyof Block, value: string | string[]) => {
+    //     setBlocks((prev) => {
+    //         const updatedBlocks = [...prev];
+
+    //         if (field === 'options' && Array.isArray(value)) {
+    //             updatedBlocks[blockIndex][field] = value ;
+    //         } else if (field === "required" && typeof value === "boolean") {
+    //             updatedBlocks[blockIndex][field] = value;
+    //         }
+    //         else {
+    //             updatedBlocks[blockIndex][field] = value as string;
+    //         }
+    //         return updatedBlocks;
+    //     });
+    // };
+
+    const handleUpdateBlock = <K extends keyof Block>(blockIndex: number, field: K, value: Block[K]) => {
         setBlocks((prev) => {
             const updatedBlocks = [...prev];
-            updatedBlocks[blockIndex][field] = value;
+            updatedBlocks[blockIndex] = {
+                ...updatedBlocks[blockIndex],
+                [field]: value,
+            }
             return updatedBlocks;
         });
     };
@@ -54,7 +81,7 @@ export default function FormularioComponent() {
         }
     };
 
-    const handleDeleteBlock = (blockIndex) => {
+    const handleDeleteBlock = (blockIndex: number) => {
         setBlocks((prev) => {
             const updatedBlocks = prev.filter((_, index) => index !== blockIndex);
             return updatedBlocks;
@@ -91,7 +118,7 @@ export default function FormularioComponent() {
                         <textarea
                             placeholder="Descrição do formulário"
                             className="w-full border border-gray-300 rounded-md p-2 text-black"
-                            rows="3"
+                            rows={3}
                         />
                     </div>
                 </div>
@@ -139,7 +166,7 @@ export default function FormularioComponent() {
                             <textarea
                                 placeholder="Texto de resposta longa"
                                 className="w-full border border-gray-300 rounded-md p-2 text-black"
-                                rows="3"
+                                rows={3}
                                 disabled
                             />
                         )}

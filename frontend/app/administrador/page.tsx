@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
 export default function AdminLogin() {
@@ -14,6 +15,9 @@ export default function AdminLogin() {
     const [mensagemErro, setMensagemErro] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const router = useRouter();
+    const faEyeIcon = faEye as IconProp;
+    const faEyeSlashIcon = faEyeSlash as IconProp;
+
 
     const handleLogin = async () => {
         try {
@@ -103,7 +107,7 @@ export default function AdminLogin() {
                                 onClick={toggleShowPassword}
                                 className="absolute inset-y-0 right-2 flex items-center"
                             >
-                                <FontAwesomeIcon icon={showPassword ? faEye : faEyeSlash} />
+                                <FontAwesomeIcon icon={showPassword ? faEyeIcon : faEyeSlashIcon} />
                             </button>
                         </div>
                     </label>
