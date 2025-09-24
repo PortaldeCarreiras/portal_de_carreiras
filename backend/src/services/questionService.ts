@@ -25,13 +25,6 @@ export default class QuestionsService {
     }
 
     async updateQuestion(id: string, pergunta: Partial<Questions>): Promise<Questions | null> {
-
-        // const existingQuestion = await this.questionsRepository.findById(id);
-        // if (!existingQuestion) {
-        //     return null;
-        // }
-
-        // const updatedQuestion = { ...existingQuestion, ...pergunta };
         return this.questionsRepository.update(id, pergunta);
     }
 

@@ -13,8 +13,6 @@ const databaseUrl = config.database.url;
 
 mongoose
   .connect(databaseUrl, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
     writeConcern: {
       w: "majority"
     }

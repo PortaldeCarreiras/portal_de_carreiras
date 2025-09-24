@@ -9,5 +9,6 @@ export default function answerRoutes(router: Router) {
     router.get("/answer", controller.getAllAnswers);
     router.get("/answer/latest", controller.getLatestAnswers);
     router.get("/answer/latest-before-date", controller.getLatestAnswersBeforeDate);
+    router.get("/answer/by-student/:id", controller.getAnswersByStudent);
     router.post("/answer", controller.createAnswer);
 }

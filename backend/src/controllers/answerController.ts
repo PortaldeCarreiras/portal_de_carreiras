@@ -36,6 +36,23 @@ export default class RespostaController {
         }
     };
 
+    public getAnswersByStudent = async (req: Request, res: Response): Promise<void> => {
+        try {
+            const { id } = req.params;
+
+            if (!id) {
+                res.status(400).json({ error: 'alunoId is required' });
+                return;
+            }
+
+            const answers = await this.answerService.getAnswersByStudent(id);
+            res.status(200).json(answers);
+        } catch (err: any) {
+            res.status(500).json({ error: err.message });
+            console.log("controller error");
+        }
+    };
+
     public getAllAnswers = async (_req: Request, res: Response): Promise<void> => {
         try {
             const answers = await this.answerService.getAllAnswers();

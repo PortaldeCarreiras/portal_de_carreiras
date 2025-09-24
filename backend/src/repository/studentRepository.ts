@@ -3,9 +3,9 @@ import hashPassword from "../utils/helpers/hashPassword";
 
 export default class StudentRepository {
   async create(student: Student): Promise<Student> {
-    const senha = student.documentos
-      ? student.documentos.cpf.toString()
-      : "user";
+    if (!student.senha) {
+      student.senha = student.documentos?.cpf?.toString() || "user";
+    }
       student.senha = await hashPassword(student.senha);
 
     const createdStudent = new StudentModel(student);

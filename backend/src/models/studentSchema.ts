@@ -2,7 +2,7 @@ import mongoose, { Document, Schema } from "mongoose";
 
 interface Identity {
   tipo: string;
-  numero: number;
+  numero: string;
 }
 
 interface Endereco {
@@ -51,7 +51,7 @@ interface Classificacao {
 
 interface Documentos {
   tipo_identidade?: string;
-  cpf: number;
+  cpf: string;
   nome_mae?: string;
 }
 
@@ -78,7 +78,7 @@ interface Student extends Document {
 
 const IdentitySchema: Schema = new Schema({
   tipo: { type: String, required: false },
-  numero: { type: Number, required: false },
+  numero: { type: String, required: false },
 });
 
 const EnderecoSchema: Schema = new Schema({
@@ -127,7 +127,7 @@ const ClassificacaoSchema: Schema = new Schema({
 
 const DocumentosSchema: Schema = new Schema({
   tipo_identidade: { type: String, required: false },
-  cpf: { type: Number, required: false },
+  cpf: { type: String, required: true },
   nome_mae: { type: String, required: false },
 });
 

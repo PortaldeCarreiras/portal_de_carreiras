@@ -2,8 +2,8 @@ import QuestionsModel, { Questions } from "../models/questionSchema";
 
 export default class QuestionsRepository {
     async create(question: Questions): Promise<Questions> {
-        const newQuestions = new QuestionsModel(question);
-        return newQuestions.save();
+        const newQuestion = new QuestionsModel(question);
+        return newQuestion.save();
     }
 
     async findById(id: string): Promise<Questions | null> {
@@ -23,7 +23,7 @@ export default class QuestionsRepository {
     }
 
     async delete(id: string): Promise<Questions | null> {
-        return QuestionsModel.findByIdAndDelete(id).exec();
+        return QuestionsModel.findByIdAndUpdate(id, { status_pergunta: false }, { new: true }).exec();
     }
 
     async createBatch(questions: Questions[]): Promise<Questions[]> {

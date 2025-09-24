@@ -17,12 +17,12 @@ export default class AnswerService {
         return this.answerRepository.findById(id)
     };
 
+    async getAnswersByStudent(id_aluno: string): Promise<Answer[]> {
+        return this.answerRepository.findByAlunoId(id_aluno);
+    }
+
     async getAllAnswers(): Promise<Answer[]> {
         return this.answerRepository.findAll();
-    };
-
-    async getAnswerByVersion(version: string): Promise<Answer[]> {
-        return this.answerRepository.findByVersion(version);
     };
 
     async getLatestAnswers(): Promise<Answer[]> {
