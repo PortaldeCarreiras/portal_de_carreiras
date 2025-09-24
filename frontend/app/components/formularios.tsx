@@ -10,6 +10,8 @@ interface Pergunta {
     _id: string;
     pergunta: string;
     categoria_pergunta: string;
+    tipo_pergunta: 'text' | 'date' | 'multiple-choice' | 'checkbox';
+    opcoes?: string[];
 }
 
 interface Resposta {
@@ -23,20 +25,47 @@ export default function FormularioComponent() {
     const [respostas, setRespostas] = useState<{ [key: string]: string }>({});
     const [categoriaSelecionada, setCategoriaSelecionada] = useState<string | null>(null);
     const [idAluno, setIdAluno] = useState<string | null>(null);
+    const [formularioId, setFormularioId] = useState<string | null>(null);
+
     const router = useRouter();
 
-
-    useEffect(() => {
-        if (typeof window !== "undefined") {
-            setIdAluno(localStorage.getItem("token"));
-        }
-    }, []);
+    // useEffect(() => {
+    //     console.log("Token on /alunos: ", localStorage.getItem("token"));
+    //     console.log("ID on /alunos: ", localStorage.getItem("id_aluno"));
+    // })
 
     // const idAluno = localStorage.getItem('id_aluno'); // Certifique-se de que o ID do aluno está armazenado
 
-    const obterPerguntasERespostas = useCallback(async () => {
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const storedId = localStorage.getItem("id_aluno");
+            if (storedId) {
+                setIdAluno(storedId);
+                obterPerguntasERespostas(storedId); // ✅ Call only when ID is ready
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'ID do aluno não encontrado. Faça login novamente.',
+                    confirmButtonText: 'OK',
+                });
+                router.push('/');
+            }
+        }
+    }, []);
 
-        if (!idAluno) {
+    useEffect(() => {
+        const fetchFormulario = async () => {
+            const res = await axiosClient.get('/forms');
+            const activeForm = res.data.find((form: any) => form.ativo);
+            if (activeForm) setFormularioId(activeForm._id);
+        };
+        fetchFormulario();
+    }, []);
+
+    const obterPerguntasERespostas = useCallback(async (id: string | null) => {
+
+        if (!id) {
             Swal.fire({
                 icon: 'error',
                 title: 'Erro',
@@ -67,7 +96,8 @@ export default function FormularioComponent() {
             setCategoriaSelecionada(Object.keys(categoriasMapeadas)[0] || null);
 
             // Obter respostas existentes
-            const respostasResponse = await axiosClient.get(`/answer?alunoId=${idAluno}`);
+            console.log("Fetching respostas for aluno ID:", id);
+            const respostasResponse = await axiosClient.get(`/answer/by-student/${id}`);
             const respostasData: Resposta[] = respostasResponse.data
 
             // Mapear respostas para preenchimento
@@ -86,11 +116,7 @@ export default function FormularioComponent() {
                 confirmButtonText: 'OK',
             });
         }
-    }, [idAluno, router]);
-
-    useEffect(() => {
-        obterPerguntasERespostas();
-    }, [obterPerguntasERespostas]);
+    }, [router]);
 
     const handleRespostaChange = (perguntaId: string, valor: string) => {
         setRespostas((prevRespostas) => ({
@@ -116,8 +142,19 @@ export default function FormularioComponent() {
                 id_aluno: idAluno,
                 id_pergunta,
                 resposta,
+                formulario: formularioId,
                 data_resposta: new Date().toISOString(),
             }));
+
+            if (!formularioId) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Erro',
+                    text: 'Nenhum formulário ativo encontrado. Contate o administrador.',
+                    confirmButtonText: 'OK',
+                });
+                return;
+            }
 
             // Envia cada resposta individualmente
             for (const resposta of respostasArray) {
@@ -196,12 +233,73 @@ export default function FormularioComponent() {
                                 <label className="block text-sm font-semibold text-gray-900 mb-2">
                                     {pergunta.pergunta}
                                 </label>
-                                <input
-                                    type="text"
-                                    value={respostas[pergunta._id] || ''}
-                                    onChange={(e) => handleRespostaChange(pergunta._id, e.target.value)}
-                                    className="w-full p-3 border border-gray-300 rounded-md shadow-sm text-black focus:outline-none focus:ring focus:ring-blue-200"
-                                />
+
+                                {/* TEXT */}
+                                {pergunta.tipo_pergunta === 'text' && (
+                                    <input
+                                        type="text"
+                                        value={respostas[pergunta._id] || ''}
+                                        onChange={(e) => handleRespostaChange(pergunta._id, e.target.value)}
+                                        className="w-full p-3 border border-gray-300 rounded-md bg-red text-black"
+                                    />
+                                )}
+
+                                {/* DATE */}
+                                {pergunta.tipo_pergunta === 'date' && (
+                                    <input
+                                        type="date"
+                                        value={respostas[pergunta._id] || ''}
+                                        onChange={(e) => handleRespostaChange(pergunta._id, e.target.value)}
+                                        className="w-full p-3 border border-gray-900 rounded-md bg-white text-black"
+                                    />
+                                )}
+
+                                {/* MULTIPLE CHOICE */}
+                                {pergunta.tipo_pergunta === 'multiple-choice' && pergunta.opcoes && (
+                                    <div className="space-y-2">
+                                        {pergunta.opcoes.map((opcao) => (
+                                            <label key={opcao} className="flex items-center text-black">
+                                                <input
+                                                    type="radio"
+                                                    name={pergunta._id}
+                                                    value={opcao}
+                                                    checked={respostas[pergunta._id] === opcao}
+                                                    onChange={() => handleRespostaChange(pergunta._id, opcao)}
+                                                    className="mr-2 accent-blue-600 bg-red-600"
+                                                />
+                                                {opcao}
+                                            </label>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* CHECKBOX */}
+                                {pergunta.tipo_pergunta === 'checkbox' && pergunta.opcoes && (
+                                    <div className="space-y-2">
+                                        {pergunta.opcoes.map((opcao) => {
+                                            const selected = respostas[pergunta._id]?.split(',') || [];
+                                            const isChecked = selected.includes(opcao);
+
+                                            return (
+                                                <label key={opcao} className="flex items-center text-black">
+                                                    <input
+                                                        type="checkbox"
+                                                        value={opcao}
+                                                        checked={isChecked}
+                                                        onChange={(e) => {
+                                                            const updated = e.target.checked
+                                                                ? [...selected, opcao]
+                                                                : selected.filter((v) => v !== opcao);
+                                                            handleRespostaChange(pergunta._id, updated.join(','));
+                                                        }}
+                                                        className="mr-2 accent-blue-600"
+                                                    />
+                                                    {opcao}
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
                         ))}
 

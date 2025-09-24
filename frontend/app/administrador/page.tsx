@@ -95,9 +95,9 @@ export default function AdminLogin() {
 
                     <label className="block text-sm font-extrabold text-gray-600 mb-2">
                         Senha:
-                        <div className="relative">
+                        <div className="relative mb-4">
                             <input
-                                className="w-full p-2 border rounded-md mb-4 shadow-md"
+                                className="w-full pr-10 py-2 px-3 border rounded-md shadow-md text-base"
                                 type={showPassword ? "text" : "password"}
                                 value={senha}
                                 onChange={(e) => setSenha(e.target.value)}
@@ -105,7 +105,7 @@ export default function AdminLogin() {
                             <button
                                 type="button"
                                 onClick={toggleShowPassword}
-                                className="absolute inset-y-0 right-2 flex items-center"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-800 focus:outline-none"
                             >
                                 <FontAwesomeIcon icon={showPassword ? faEyeIcon : faEyeSlashIcon} />
                             </button>

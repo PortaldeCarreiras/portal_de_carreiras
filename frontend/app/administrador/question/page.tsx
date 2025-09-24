@@ -11,7 +11,7 @@ export default function PerguntasComponent() {
         question: string;
         category: string;
         type: string;
-        options: string[]
+        opcoes: string[]
     };
 
     const [blocks, setBlocks] = useState<BlockType[]>([
@@ -19,7 +19,7 @@ export default function PerguntasComponent() {
             question: '',
             category: '',
             type: 'text',
-            options: ['Opção 1'],
+            opcoes: ['Opção 1'],
         },
     ]);
 
@@ -27,10 +27,10 @@ export default function PerguntasComponent() {
         setBlocks((prev) => {
             const updatedBlocks = [...prev];
             const block = updatedBlocks[blockIndex];
-            const newOption = `Opção ${block.options.length + 1}`;
+            const newOption = `Opção ${block.opcoes.length + 1}`;
             updatedBlocks[blockIndex] = {
                 ...block,
-                options: [...block.options, newOption],
+                opcoes: [...block.opcoes, newOption],
             };
             return updatedBlocks;
         });
@@ -40,7 +40,7 @@ export default function PerguntasComponent() {
         setBlocks((prev) => {
             const updatedBlocks = [...prev];
             const block = updatedBlocks[blockIndex];
-            block.options.splice(optionIndex, 1);
+            block.opcoes.splice(optionIndex, 1);
             return updatedBlocks;
         });
     };
@@ -48,7 +48,7 @@ export default function PerguntasComponent() {
     const handleUpdateBlock = (blockIndex: number, field: keyof BlockType, value: string | string[]) => {
         setBlocks((prev) => {
             const updatedBlocks = [...prev];
-            if (field === 'options') {
+            if (field === 'opcoes') {
                 updatedBlocks[blockIndex][field] = Array.isArray(value) ? value : [value];
             } else {
                 updatedBlocks[blockIndex][field] = value as string;
@@ -60,7 +60,7 @@ export default function PerguntasComponent() {
     const handleAddNewBlock = () => {
         setBlocks((prev) => [
             ...prev,
-            { question: '', category: '', type: 'text', options: ['Opção 1'] },
+            { question: '', category: '', type: 'text', opcoes: ['Opção 1'] },
         ]);
     };
 
@@ -71,14 +71,15 @@ export default function PerguntasComponent() {
     const handleSaveQuestions = async () => {
         try {
             for (const block of blocks) {
-                const payload: { pergunta: string; categoria_pergunta: string; status_pergunta: boolean; options?: string[] } = {
+                const payload: { pergunta: string; categoria_pergunta: string; status_pergunta: boolean; tipo_pergunta: string; opcoes?: string[] } = {
                     pergunta: block.question,
                     categoria_pergunta: block.category,
                     status_pergunta: true, // Todas as perguntas são ativas por padrão
+                    tipo_pergunta: block.type,
                 };
 
                 if (block.type === 'multiple-choice' || block.type === 'checkbox') {
-                    payload['options'] = block.options; // Adiciona opções para múltipla escolha/checkbox
+                    payload['opcoes'] = block.opcoes; // Adiciona opções para múltipla escolha/checkbox
                 }
 
                 await axiosClient.post('/question', payload);
@@ -90,7 +91,7 @@ export default function PerguntasComponent() {
                     question: '',
                     category: '',
                     type: 'text',
-                    options: ['Opção 1'],
+                    opcoes: ['Opção 1'],
                 },
             ]);
         } catch (error) {
@@ -117,7 +118,7 @@ export default function PerguntasComponent() {
                         onClick={() => window.location.href = '/administrador/managementforms'}
                         className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
                     >
-                        Gerenciar Perguntas
+                        Formulários
                     </button>
                 </div>
             </nav>
@@ -184,7 +185,7 @@ export default function PerguntasComponent() {
 
                         {(block.type === 'multiple-choice' || block.type === 'checkbox') && (
                             <div className="mb-4">
-                                {block.options.map((option, optionIndex) => (
+                                {block.opcoes.map((option, optionIndex) => (
                                     <div key={optionIndex} className="flex items-center mb-2">
                                         {block.type === 'multiple-choice' && (
                                             <input type="radio" className="mr-2" disabled />
@@ -196,9 +197,9 @@ export default function PerguntasComponent() {
                                             type="text"
                                             value={option}
                                             onChange={(e) => {
-                                                const updatedOptions = [...block.options];
+                                                const updatedOptions = [...block.opcoes];
                                                 updatedOptions[optionIndex] = e.target.value;
-                                                handleUpdateBlock(blockIndex, 'options', updatedOptions);
+                                                handleUpdateBlock(blockIndex, 'opcoes', updatedOptions);
                                             }}
                                             className="flex-1 border border-gray-300 rounded-md p-2 text-black"
                                         />

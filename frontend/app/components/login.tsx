@@ -9,6 +9,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
+
 export default function LoginComponent() {
     const [cpf, setCpf] = useState('');
     const [senha, setSenha] = useState('');
@@ -23,11 +24,16 @@ export default function LoginComponent() {
             const response = await api.post('/auth/login/student', { cpf, password: senha }, {
                 headers: {
                     'Content-Type': 'application/json',
+                    // 'Authorization': `Bearer ${localStorage.getItem("token")}`
                 },
             });
 
+            console.log("Login Response: ", response.data);
+
             if (response.data.token) {
                 const { id } = response.data.model;
+
+                // console.log("Extracted ID: ", id);
 
                 // Exibe mensagem de sucesso
                 Swal.fire("Logado com sucesso!");
@@ -39,6 +45,7 @@ export default function LoginComponent() {
                 // Redireciona para a página inicial do aluno
                 router.push("/alunos");
             } else {
+                console.error("Login Error: ", Error);
                 setMensagemErro("Erro ao obter token de acesso");
             }
         } catch (error) {
